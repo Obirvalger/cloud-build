@@ -1,0 +1,25 @@
+---
+remote: remote:/pub/images/{branch}/cloud
+key: '0x00000000'
+
+images:
+  opennebula:
+    target: vm/opennebula-systemd
+    kind:
+    - qcow2
+    skip_arches:
+    - aarch64
+  rootfs-systemd:
+    target: ve/systemd-base
+    kind:
+    - tar.xz
+
+branches:
+    Sisyphus:
+    - i586
+    - x86_64
+    - aarch64
+    p8:
+    - i586
+    - x86_64
+...
