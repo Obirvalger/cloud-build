@@ -240,11 +240,16 @@ class CB:
         return path
 
     def copy_image(self, src: str, dst: str) -> None:
-        if os.path.exists(dst):
-            os.unlink(dst)
         os.link(src, dst)
 
+    def clear_imager_dir(self):
+        for branch in self.branches:
+            directory = f'{self.images_dir}{branch}'
+            for path in os.listdir(directory):
+                os.unlink(f'{directory}/{path}')
+
     def create_images(self) -> None:
+        self.clear_imager_dir()
         for branch in self.branches:
             images_in_branch = []
             for image in self.images:
