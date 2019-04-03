@@ -41,8 +41,7 @@ class CB:
             format='%(levelname)s:%(asctime)s - %(message)s',
         )
         self.log = logging.getLogger(PROG)
-        # self.log.setLevel(logging.DEBUG)
-        self.log.setLevel(logging.INFO)
+        self.log.setLevel(self.log_level)
         self.info(f'Start {PROG}')
 
     @contextlib.contextmanager
@@ -61,6 +60,8 @@ class CB:
         self.mkimage_profiles_git = os.path.expanduser(
             cfg.get('mkimage_profiles_git')
         )
+
+        self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
 
         try:
             self._remote = os.path.expanduser(cfg['remote'])
