@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import argparse
 import contextlib
@@ -168,6 +168,20 @@ class CB:
             self.info('Downloading mkimage-profiles')
             self.call(['git', 'clone', url, 'mkimage-profiles'])
 
+        # create file with proper brandings
+        with self.pushd('mkimage-profiles'):
+            branch_requires = {
+                'Sisyphus': [],
+                'p8': ['mixin/p8'],
+            }  # type: Dict[str, List[str]]
+            with open(f'conf.d/{PROG}.mk', 'w') as f:
+                for image in self.images:
+                    target = self.target_by_image(image)
+                    for branch in self.branches:
+                        requires = ' '.join([target] + branch_requires[branch])
+                        s = f'{target}_{branch}: {requires}; @:'
+                        print(s, file=f)
+
         apt_dir = self.work_dir + 'apt'
         if not os.path.isdir(apt_dir):
             self.run_script('gen-apt-files.sh', [apt_dir])
@@ -201,30 +215,28 @@ class CB:
     ) -> str:
         self.ensure_mkimage_profiles()
 
+        target = f'{target}_{branch}'
         image = re.sub(r'.*/', '', target)
         full_target = f'{target}.{kind}'
-        tarball = f'{self.out_dir}{image}-{branch}-{self.date}-{arch}.{kind}'
+        tarball = f'{self.out_dir}{image}-{self.date}-{arch}.{kind}'
         apt_dir = self.work_dir + 'apt'
         with self.pushd(self.work_dir + 'mkimage-profiles'):
             if os.path.exists(tarball):
-                self.info(f'Skip building of {full_target} {branch} {arch}')
+                self.info(f'Skip building of {full_target} {arch}')
             else:
                 cmd = [
                     'make',
                     f'APTCONF={apt_dir}/apt.conf.{branch}.{arch}',
                     f'ARCH={arch}',
                     f'IMAGE_OUTDIR={self.out_dir.rstrip("/")}',
-                    f'DISTRO_VERSION={branch}',
                     full_target,
                 ]
-                self.info(f'Begin building of {full_target} {branch} {arch}')
+                self.info(f'Begin building of {full_target} {arch}')
                 self.call(cmd)
                 if os.path.exists(tarball):
-                    self.info(f'End building of {full_target} {branch} {arch}')
+                    self.info(f'End building of {full_target} {arch}')
                 else:
-                    self.error(
-                        f'Fail building of {full_target} {branch} {arch}'
-                    )
+                    self.error(f'Fail building of {full_target} {arch}')
 
         return tarball
 
