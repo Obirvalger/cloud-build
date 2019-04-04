@@ -295,6 +295,13 @@ class CB:
             self.info(f'Sign checksum of {string}')
             self.call(['gpg2', '--yes', '-basu', self.key, sum_file])
 
+    def kick(self):
+        remote = self._remote
+        colon = remote.find(':')
+        if colon != -1:
+            host = remote[:colon]
+            self.call(['ssh', host, 'kick'])
+
     def sync(self) -> None:
         self.create_images()
         for branch in self.branches:
@@ -303,7 +310,7 @@ class CB:
             cmd = ['rsync', '-v'] + files + [remote]
             self.call(cmd)
 
-        self.call(['ssh', 'proto', 'kick'])
+        self.kick()
 
 
 def get_data_dir() -> str:
