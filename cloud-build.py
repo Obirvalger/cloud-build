@@ -148,6 +148,9 @@ class CB:
         for branch in self.branches:
             os.makedirs(self.images_dir + branch, exist_ok=True)
 
+    def escape_branch(self, branch: str) -> str:
+        return re.sub(r'\.', '_', branch)
+
     def ensure_mkimage_profiles(self, update: bool = False) -> None:
         """Checks that mkimage-profiles exists or clones it"""
 
@@ -178,8 +181,9 @@ class CB:
                 for image in self.images:
                     target = self.target_by_image(image)
                     for branch in self.branches:
+                        ebranch = self.escape_branch(branch)
                         requires = ' '.join([target] + branch_requires[branch])
-                        s = f'{target}_{branch}: {requires}; @:'
+                        s = f'{target}_{ebranch}: {requires}; @:'
                         print(s, file=f)
 
         apt_dir = self.work_dir + 'apt'
@@ -215,7 +219,7 @@ class CB:
     ) -> str:
         self.ensure_mkimage_profiles()
 
-        target = f'{target}_{branch}'
+        target = f'{target}_{self.escape_branch(branch)}'
         image = re.sub(r'.*/', '', target)
         full_target = f'{target}.{kind}'
         tarball = f'{self.out_dir}{image}-{self.date}-{arch}.{kind}'
