@@ -9,6 +9,10 @@ images:
     - qcow2
     skip_arches:
     - aarch64
+  rootfs-minimal:
+    target: ve/docker
+    kind:
+    - tar.xz
   rootfs-systemd:
     target: ve/systemd-base
     kind:
@@ -16,10 +20,13 @@ images:
 
 branches:
     Sisyphus:
-    - i586
-    - x86_64
-    - aarch64
+      arches:
+      - i586
+      - x86_64
+      - aarch64
     p8:
-    - i586
-    - x86_64
+      arches:
+      - i586
+      - x86_64
+      branding: alt-starterkit
 ...

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import argparse
 import contextlib
@@ -173,17 +173,32 @@ class CB:
 
         # create file with proper brandings
         with self.pushd('mkimage-profiles'):
-            branch_requires = {
-                'Sisyphus': [],
-                'p8': ['mixin/p8'],
-            }  # type: Dict[str, List[str]]
             with open(f'conf.d/{PROG}.mk', 'w') as f:
                 for image in self.images:
                     target = self.target_by_image(image)
                     for branch in self.branches:
                         ebranch = self.escape_branch(branch)
-                        requires = ' '.join([target] + branch_requires[branch])
-                        s = f'{target}_{ebranch}: {requires}; @:'
+
+                        requires = [target]
+                        requires.extend(self.requires_by_branch(branch))
+                        requires_s = ' '.join(requires)
+
+                        branding = self.branding_by_branch(branch)
+                        if branding:
+                            branding = f'\n\t@$(call set,BRANDING,{branding})'
+                        rules = [branding]
+
+                        packages = (
+                            self.packages_by_image(image)
+                            + self.packages_by_branch(branch)
+                        )
+                        for package in packages:
+                            rules.append(
+                                f'\n\t@$(call add,BASE_PACKAGES,{package})'
+                            )
+                        rules_s = ''.join(rules)
+
+                        s = f'{target}_{ebranch}: {requires_s}; @:{rules_s}'
                         print(s, file=f)
 
         apt_dir = self.work_dir + 'apt'
@@ -195,7 +210,16 @@ class CB:
         return list(self._branches.keys())
 
     def arches_by_branch(self, branch: str) -> List[str]:
-        return self._branches[branch]
+        return self._branches[branch]['arches']
+
+    def branding_by_branch(self, branch: str) -> str:
+        return self._branches[branch].get('branding', '')
+
+    def packages_by_branch(self, branch: str) -> List[str]:
+        return self._branches[branch].get('packages', [])
+
+    def requires_by_branch(self, branch: str) -> List[str]:
+        return self._branches[branch].get('requires', [])
 
     @property
     def images(self) -> List[str]:
@@ -209,6 +233,9 @@ class CB:
 
     def skip_arch(self, image: str, arch: str) -> bool:
         return arch in self._images[image].get('skip_arches', [])
+
+    def packages_by_image(self, image: str) -> List[str]:
+        return self._images[image].get('packages', [])
 
     def build_tarball(
         self,
