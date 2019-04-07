@@ -5,17 +5,17 @@ key: '0x00000000'
 images:
   opennebula:
     target: vm/opennebula-systemd
-    kind:
+    kinds:
     - qcow2
     skip_arches:
     - aarch64
   rootfs-minimal:
     target: ve/docker
-    kind:
+    kinds:
     - tar.xz
   rootfs-systemd:
     target: ve/systemd-base
-    kind:
+    kinds:
     - tar.xz
 
 branches:

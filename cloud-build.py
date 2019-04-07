@@ -226,7 +226,7 @@ class CB:
         return list(self._images.keys())
 
     def kinds_by_image(self, image: str) -> List[str]:
-        return self._images[image]['kind']
+        return self._images[image]['kinds']
 
     def target_by_image(self, image: str) -> str:
         return self._images[image]['target']
