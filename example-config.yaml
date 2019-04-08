@@ -29,4 +29,11 @@ branches:
       - i586
       - x86_64
       branding: alt-starterkit
+
+# packages:
+  # gosu:
+    # images:
+    # - rootfs-minimal
+    # exclude_branches:
+    # - p8
 ...

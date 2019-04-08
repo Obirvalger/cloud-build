@@ -63,6 +63,8 @@ class CB:
 
         self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
 
+        self._packages = cfg.get('packages', {})
+
         try:
             self._remote = os.path.expanduser(cfg['remote'])
             self.key = cfg['key']
@@ -188,11 +190,7 @@ class CB:
                             branding = f'\n\t@$(call set,BRANDING,{branding})'
                         rules = [branding]
 
-                        packages = (
-                            self.packages_by_image(image)
-                            + self.packages_by_branch(branch)
-                        )
-                        for package in packages:
+                        for package in self.packages(image, branch):
                             rules.append(
                                 f'\n\t@$(call add,BASE_PACKAGES,{package})'
                             )
@@ -215,9 +213,6 @@ class CB:
     def branding_by_branch(self, branch: str) -> str:
         return self._branches[branch].get('branding', '')
 
-    def packages_by_branch(self, branch: str) -> List[str]:
-        return self._branches[branch].get('packages', [])
-
     def requires_by_branch(self, branch: str) -> List[str]:
         return self._branches[branch].get('requires', [])
 
@@ -234,8 +229,23 @@ class CB:
     def skip_arch(self, image: str, arch: str) -> bool:
         return arch in self._images[image].get('skip_arches', [])
 
-    def packages_by_image(self, image: str) -> List[str]:
-        return self._images[image].get('packages', [])
+    def packages(self, image: str, branch: str) -> List[str]:
+        packages = []
+
+        for package, constraints in self._packages.items():
+            if image in constraints.get('exclude_images', []):
+                continue
+            if branch in constraints.get('exclude_branches', []):
+                continue
+
+            # Empty means no constraint: e.g. all images
+            images = constraints.get('images', [image])
+            branches = constraints.get('branch', [branch])
+
+            if image in images and branch in branches:
+                packages.append(package)
+
+        return packages
 
     def build_tarball(
         self,
