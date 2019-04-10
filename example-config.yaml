@@ -30,6 +30,14 @@ branches:
       - x86_64
       branding: alt-starterkit
 
+# services:
+  # sshd:
+    # images:
+    # - opennebula
+    # exclude_branches:
+    # - Sisyphus
+    # state: disable
+
 # packages:
   # gosu:
     # images:

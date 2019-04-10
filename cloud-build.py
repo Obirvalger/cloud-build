@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import argparse
 import contextlib
@@ -34,6 +34,7 @@ class CB:
         self.system_datadir = system_datadir
 
         self.date = datetime.date.today().strftime('%Y%m%d')
+        self.service_default_state = 'enabled'
 
         self.ensure_dirs()
         logging.basicConfig(
@@ -64,6 +65,7 @@ class CB:
         self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
 
         self._packages = cfg.get('packages', {})
+        self._services = cfg.get('services', {})
 
         try:
             self._remote = os.path.expanduser(cfg['remote'])
@@ -156,6 +158,9 @@ class CB:
     def ensure_mkimage_profiles(self, update: bool = False) -> None:
         """Checks that mkimage-profiles exists or clones it"""
 
+        def add_rule(variable: str, value: str) -> str:
+            return f'\n\t@$(call add,{variable},{value})'
+
         url = self.mkimage_profiles_git
         if url is None:
             url = (
@@ -191,9 +196,15 @@ class CB:
                         rules = [branding]
 
                         for package in self.packages(image, branch):
-                            rules.append(
-                                f'\n\t@$(call add,BASE_PACKAGES,{package})'
-                            )
+                            rules.append(add_rule('BASE_PACKAGES', package))
+
+                        for service in self.enabled_services(image, branch):
+                            rules.append(add_rule('DEFAULT_SERVICES_ENABLE',
+                                                  service))
+                        for service in self.disabled_services(image, branch):
+                            rules.append(add_rule('DEFAULT_SERVICES_DISABLE',
+                                                  service))
+
                         rules_s = ''.join(rules)
 
                         s = f'{target}_{ebranch}: {requires_s}; @:{rules_s}'
@@ -229,23 +240,63 @@ class CB:
     def skip_arch(self, image: str, arch: str) -> bool:
         return arch in self._images[image].get('skip_arches', [])
 
-    def packages(self, image: str, branch: str) -> List[str]:
-        packages = []
+    def get_items(
+        self,
+        data: Dict,
+        image: str,
+        branch: str,
+        state_re: str = None,
+        default_state: str = None,
+    ) -> List[str]:
+        items = []
 
-        for package, constraints in self._packages.items():
-            if image in constraints.get('exclude_images', []):
-                continue
-            if branch in constraints.get('exclude_branches', []):
+        if state_re is None:
+            state_re = ''
+        if default_state is None:
+            default_state = state_re
+
+        for item, constraints in data.items():
+            if (
+                image in constraints.get('exclude_images', [])
+                or branch in constraints.get('exclude_branches', [])
+            ):
                 continue
 
             # Empty means no constraint: e.g. all images
             images = constraints.get('images', [image])
             branches = constraints.get('branch', [branch])
 
-            if image in images and branch in branches:
-                packages.append(package)
+            state = constraints.get('state', default_state)
 
-        return packages
+            if (
+                image in images
+                and branch in branches
+                and re.match(state_re, state)
+            ):
+                items.append(item)
+
+        return items
+
+    def packages(self, image: str, branch: str) -> List[str]:
+        return self.get_items(self._packages, image, branch)
+
+    def enabled_services(self, image: str, branch: str) -> List[str]:
+        return self.get_items(
+            self._services,
+            image,
+            branch,
+            'enabled?',
+            self.service_default_state,
+        )
+
+    def disabled_services(self, image: str, branch: str) -> List[str]:
+        return self.get_items(
+            self._services,
+            image,
+            branch,
+            'disabled?',
+            self.service_default_state,
+        )
 
     def build_tarball(
         self,
