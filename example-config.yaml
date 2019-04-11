@@ -1,6 +1,7 @@
 ---
 remote: remote:/pub/images/{branch}/cloud
 key: '0x00000000'
+repository_url: file:///space/ALT
 
 images:
   opennebula:
@@ -29,6 +30,7 @@ branches:
       - i586
       - x86_64
       branding: alt-starterkit
+      repository_url: file:///space/ALT
 
 # services:
   # sshd:

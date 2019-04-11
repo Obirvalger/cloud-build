@@ -64,6 +64,8 @@ class CB:
 
         self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
 
+        self._repository_url = cfg.get('repository_url', 'file:///space/ALT')
+
         self._packages = cfg.get('packages', {})
         self._services = cfg.get('services', {})
 
@@ -89,6 +91,10 @@ class CB:
 
     def remote(self, branch: str) -> str:
         return self._remote.format(branch=branch)
+
+    def repository_url(self, branch: str) -> str:
+        return self._branches[branch].get('repository_url',
+                                          self._repository_url)
 
     def run_script(self, name: str, args: Optional[List[str]] = None) -> None:
         path = self.scripts_dir + name
@@ -152,6 +158,30 @@ class CB:
         for branch in self.branches:
             os.makedirs(self.images_dir + branch, exist_ok=True)
 
+    def generate_apt_files(self) -> None:
+        apt_dir = self.work_dir + 'apt'
+        os.makedirs(apt_dir, exist_ok=True)
+        for branch in self.branches:
+            for arch in self.arches_by_branch(branch):
+                repo = self.repository_url(branch)
+                with open(f'{apt_dir}/apt.conf.{branch}.{arch}', 'w') as f:
+                    apt_conf = f'''
+Dir::Etc::main "/dev/null";
+Dir::Etc::parts "/var/empty";
+Dir::Etc::SourceList "{apt_dir}/sources.list.{branch}.{arch}";
+Dir::Etc::SourceParts "/var/empty";
+Dir::Etc::preferences "/dev/null";
+Dir::Etc::preferencesparts "/var/empty";
+'''
+                    f.write(apt_conf)
+
+                with open(f'{apt_dir}/sources.list.{branch}.{arch}', 'w') as f:
+                    sources_list = f'''
+rpm {repo}/{branch} {arch} classic
+rpm {repo}/{branch} noarch classic
+'''
+                    f.write(sources_list)
+
     def escape_branch(self, branch: str) -> str:
         return re.sub(r'\.', '_', branch)
 
@@ -210,9 +240,7 @@ class CB:
                         s = f'{target}_{ebranch}: {requires_s}; @:{rules_s}'
                         print(s, file=f)
 
-        apt_dir = self.work_dir + 'apt'
-        if not os.path.isdir(apt_dir):
-            self.run_script('gen-apt-files.sh', [apt_dir])
+        self.generate_apt_files()
 
     @property
     def branches(self) -> List[str]:
