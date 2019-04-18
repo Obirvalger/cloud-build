@@ -59,7 +59,7 @@ class CB:
             cfg = yaml.safe_load(f)
 
         self.mkimage_profiles_git = os.path.expanduser(
-            cfg.get('mkimage_profiles_git')
+            cfg.get('mkimage_profiles_git', '')
         )
 
         self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
@@ -194,7 +194,7 @@ rpm {repo}/{branch} noarch classic
             return f'\n\t@$(call add,{variable},{value})'
 
         url = self.mkimage_profiles_git
-        if url is None:
+        if url == '':
             url = (
                 'git://'
                 + 'git.altlinux.org/'
