@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import argparse
 import contextlib
@@ -9,7 +9,6 @@ import glob
 import logging
 import os
 import re
-import shutil
 import subprocess
 import sys
 
@@ -30,7 +29,6 @@ class CB:
         self.images_dir = data_dir + 'images/'
         self.work_dir = data_dir + 'work/'
         self.out_dir = data_dir + 'out/'
-        self.scripts_dir = data_dir + 'scripts/'
         self.system_datadir = system_datadir
 
         self.date = datetime.date.today().strftime('%Y%m%d')
@@ -106,26 +104,6 @@ class CB:
             url = self._branches[branch].get('repository_url',
                                              self._repository_url)
         return url.format(branch=branch, arch=arch)
-
-    def run_script(self, name: str, args: Optional[List[str]] = None) -> None:
-        path = self.scripts_dir + name
-        if not os.path.exists(path):
-            system_path = f'{self.system_datadir}scripts/{name}'
-            if os.path.exists(system_path):
-                shutil.copyfile(system_path, path)
-            else:
-                msg = f'Required script `{name}` does not exist'
-                self.error(msg)
-        if not os.access(path, os.X_OK):
-            st = os.stat(path)
-            os.chmod(path, st.st_mode | 0o111)
-
-        if args is None:
-            args = [path]
-        else:
-            args = [path] + args
-
-        self.call(args)
 
     def call(
         self,
