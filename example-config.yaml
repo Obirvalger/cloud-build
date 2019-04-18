@@ -1,6 +1,6 @@
 ---
 remote: remote:/pub/images/{branch}/cloud
-key: '0x00000000'
+key: 0x00000000
 repository_url: file:///space/ALT
 
 images:

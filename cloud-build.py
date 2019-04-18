@@ -72,6 +72,8 @@ class CB:
         try:
             self._remote = os.path.expanduser(cfg['remote'])
             self.key = cfg['key']
+            if isinstance(self.key, int):
+                self.key = '{:X}'.format(self.key)
             self._images = cfg['images']
             self._branches = cfg['branches']
         except KeyError as e:
