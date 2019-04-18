@@ -64,7 +64,10 @@ class CB:
 
         self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
 
-        self._repository_url = cfg.get('repository_url', 'file:///space/ALT')
+        self._repository_url = cfg.get('repository_url',
+                                       'file:///space/ALT/{branch}')
+
+        self.bad_arches = cfg.get('bad_arches', [])
 
         self._packages = cfg.get('packages', {})
         self._services = cfg.get('services', {})
@@ -76,6 +79,9 @@ class CB:
                 self.key = '{:X}'.format(self.key)
             self._images = cfg['images']
             self._branches = cfg['branches']
+            for _, branch in self._branches.items():
+                branch['arches'] = {k: {} if v is None else v
+                                    for k, v in branch['arches'].items()}
         except KeyError as e:
             msg = f'Required parameter {e} does not set in config'
             print(msg, file=sys.stderr)
@@ -94,9 +100,12 @@ class CB:
     def remote(self, branch: str) -> str:
         return self._remote.format(branch=branch)
 
-    def repository_url(self, branch: str) -> str:
-        return self._branches[branch].get('repository_url',
-                                          self._repository_url)
+    def repository_url(self, branch: str, arch: str) -> str:
+        url = self._branches[branch]['arches'][arch].get('repository_url')
+        if url is None:
+            url = self._branches[branch].get('repository_url',
+                                             self._repository_url)
+        return url.format(branch=branch, arch=arch)
 
     def run_script(self, name: str, args: Optional[List[str]] = None) -> None:
         path = self.scripts_dir + name
@@ -165,7 +174,7 @@ class CB:
         os.makedirs(apt_dir, exist_ok=True)
         for branch in self.branches:
             for arch in self.arches_by_branch(branch):
-                repo = self.repository_url(branch)
+                repo = self.repository_url(branch, arch)
                 with open(f'{apt_dir}/apt.conf.{branch}.{arch}', 'w') as f:
                     apt_conf = f'''
 Dir::Etc::main "/dev/null";
@@ -178,10 +187,9 @@ Dir::Etc::preferencesparts "/var/empty";
                     f.write(apt_conf)
 
                 with open(f'{apt_dir}/sources.list.{branch}.{arch}', 'w') as f:
-                    sources_list = f'''
-rpm {repo}/{branch} {arch} classic
-rpm {repo}/{branch} noarch classic
-'''
+                    sources_list = f'rpm {repo} {arch} classic'
+                    if arch not in self.bad_arches:
+                        sources_list += f'\nrpm {repo} noarch classic'
                     f.write(sources_list)
 
     def escape_branch(self, branch: str) -> str:
@@ -249,7 +257,7 @@ rpm {repo}/{branch} noarch classic
         return list(self._branches.keys())
 
     def arches_by_branch(self, branch: str) -> List[str]:
-        return self._branches[branch]['arches']
+        return list(self._branches[branch]['arches'].keys())
 
     def branding_by_branch(self, branch: str) -> str:
         return self._branches[branch].get('branding', '')

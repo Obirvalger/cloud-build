@@ -1,7 +1,10 @@
 ---
 remote: remote:/pub/images/{branch}/cloud
 key: 0x00000000
-repository_url: file:///space/ALT
+repository_url: file:///space/ALT/{branch}
+log_level: info
+bad_arches:
+- armh
 
 images:
   opennebula:
@@ -20,17 +23,19 @@ images:
     - tar.xz
 
 branches:
-    Sisyphus:
-      arches:
-      - i586
-      - x86_64
-      - aarch64
-    p8:
-      arches:
-      - i586
-      - x86_64
-      branding: alt-starterkit
-      repository_url: file:///space/ALT
+  Sisyphus:
+    arches:
+      i586:
+      x86_64:
+      aarch64:
+      armh:
+        repository_url: file:///space/ALT/{branch}-{arch}
+  p8:
+    arches:
+      i586:
+      x86_64:
+    branding: alt-starterkit
+    repository_url: file:///space/ALT/{branch}
 
 # services:
   # sshd:
