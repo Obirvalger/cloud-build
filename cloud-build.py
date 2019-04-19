@@ -165,9 +165,9 @@ Dir::Etc::preferencesparts "/var/empty";
                     f.write(apt_conf)
 
                 with open(f'{apt_dir}/sources.list.{branch}.{arch}', 'w') as f:
-                    sources_list = f'rpm {repo} {arch} classic'
+                    sources_list = f'rpm {repo} {arch} classic\n'
                     if arch not in self.bad_arches:
-                        sources_list += f'\nrpm {repo} noarch classic'
+                        sources_list += f'rpm {repo} noarch classic\n'
                     f.write(sources_list)
 
     def escape_branch(self, branch: str) -> str:
