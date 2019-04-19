@@ -11,7 +11,7 @@ images:
     target: vm/opennebula-systemd
     kinds:
     - qcow2
-    skip_arches:
+    exclude_arches:
     - aarch64
   rootfs-minimal:
     target: ve/docker

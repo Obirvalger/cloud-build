@@ -254,7 +254,7 @@ Dir::Etc::preferencesparts "/var/empty";
         return self._images[image]['target']
 
     def skip_arch(self, image: str, arch: str) -> bool:
-        return arch in self._images[image].get('skip_arches', [])
+        return arch in self._images[image].get('exclude_arches', [])
 
     def get_items(
         self,
