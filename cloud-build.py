@@ -5,6 +5,7 @@ from typing import Dict, List
 import argparse
 import contextlib
 import datetime
+import fcntl
 import glob
 import logging
 import os
@@ -26,6 +27,10 @@ class CB:
         data_dir = (os.getenv('XDG_DATA_HOME',
                               os.path.expanduser('~/.local/share'))
                     + f'/{PROG}/')
+        self.data_dir = data_dir
+
+        self.ensure_run_once()
+
         self.images_dir = data_dir + 'images/'
         self.work_dir = data_dir + 'work/'
         self.out_dir = data_dir + 'out/'
@@ -42,6 +47,15 @@ class CB:
         self.log = logging.getLogger(PROG)
         self.log.setLevel(self.log_level)
         self.info(f'Start {PROG}')
+
+    def ensure_run_once(self):
+        self.lock_file = open(self.data_dir + f'{PROG}.lock', 'w')
+
+        try:
+            fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError: # already locked
+            print(f'{PROG} already running', file=sys.stderr)
+            exit(3)
 
     @contextlib.contextmanager
     def pushd(self, new_dir):
