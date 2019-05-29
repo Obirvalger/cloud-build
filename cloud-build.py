@@ -382,6 +382,12 @@ Dir::Etc::preferencesparts "/var/empty";
             for path in os.listdir(directory):
                 os.unlink(f'{directory}/{path}')
 
+    def remove_old_tarballs(self):
+        with self.pushd(self.out_dir):
+            for tb in os.listdir():
+                if not re.search(f'-{self.date}-', tb):
+                    os.unlink(tb)
+
     def create_images(self) -> None:
         self.clear_imager_dir()
         for branch in self.branches:
@@ -400,6 +406,8 @@ Dir::Etc::preferencesparts "/var/empty";
                         self.copy_image(tarball, image_path)
                         images_in_branch.append(image_path)
             self.checksum_sign(images_in_branch)
+
+        self.remove_old_tarballs()
 
     def checksum_sign(self, images):
         if len(images) == 0:
