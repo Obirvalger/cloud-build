@@ -190,7 +190,7 @@ Dir::Etc::preferencesparts "/var/empty";
     def ensure_mkimage_profiles(self, update: bool = False) -> None:
         """Checks that mkimage-profiles exists or clones it"""
 
-        def add_rule(variable: str, value: str) -> str:
+        def add_recipe(variable: str, value: str) -> str:
             return f'\n\t@$(call add,{variable},{value})'
 
         url = self.mkimage_profiles_git
@@ -218,29 +218,40 @@ Dir::Etc::preferencesparts "/var/empty";
                     for branch in self.branches:
                         ebranch = self.escape_branch(branch)
 
-                        requires = [target]
-                        requires.extend(self.requires_by_branch(branch))
-                        requires_s = ' '.join(requires)
+                        prerequisites = [target]
+                        prerequisites.extend(
+                            self.prerequisites_by_branch(branch)
+                        )
+                        prerequisites_s = ' '.join(prerequisites)
 
                         branding = self.branding_by_branch(branch)
                         if branding:
                             branding = f'\n\t@$(call set,BRANDING,{branding})'
-                        rules = [branding]
+                        recipes = [branding]
 
                         for package in self.packages(image, branch):
-                            rules.append(add_rule('BASE_PACKAGES', package))
+                            recipes.append(
+                                add_recipe(
+                                    'BASE_PACKAGES',
+                                    package))
 
                         for service in self.enabled_services(image, branch):
-                            rules.append(add_rule('DEFAULT_SERVICES_ENABLE',
-                                                  service))
+                            recipes.append(
+                                add_recipe(
+                                    'DEFAULT_SERVICES_ENABLE',
+                                    service))
                         for service in self.disabled_services(image, branch):
-                            rules.append(add_rule('DEFAULT_SERVICES_DISABLE',
-                                                  service))
+                            recipes.append(
+                                add_recipe(
+                                    'DEFAULT_SERVICES_DISABLE',
+                                    service))
 
-                        rules_s = ''.join(rules)
+                        recipes_s = ''.join(recipes)
 
-                        s = f'{target}_{ebranch}: {requires_s}; @:{rules_s}'
-                        print(s, file=f)
+                        rule = f'''
+{target}_{ebranch}: {prerequisites_s}; @:{recipes_s}
+'''.strip()
+                        print(rule, file=f)
 
         self.generate_apt_files()
 
@@ -254,8 +265,8 @@ Dir::Etc::preferencesparts "/var/empty";
     def branding_by_branch(self, branch: str) -> str:
         return self._branches[branch].get('branding', '')
 
-    def requires_by_branch(self, branch: str) -> List[str]:
-        return self._branches[branch].get('requires', [])
+    def prerequisites_by_branch(self, branch: str) -> List[str]:
+        return self._branches[branch].get('prerequisites', [])
 
     @property
     def images(self) -> List[str]:
