@@ -53,7 +53,7 @@ class CB:
 
         try:
             fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError: # already locked
+        except OSError:  # already locked
             print(f'{PROG} already running', file=sys.stderr)
             exit(3)
 
