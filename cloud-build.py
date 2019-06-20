@@ -222,6 +222,9 @@ Dir::Etc::preferencesparts "/var/empty";
                         prerequisites.extend(
                             self.prerequisites_by_branch(branch)
                         )
+                        prerequisites.extend(
+                            self.prerequisites_by_image(image)
+                        )
                         prerequisites_s = ' '.join(prerequisites)
 
                         branding = self.branding_by_branch(branch)
@@ -277,6 +280,9 @@ Dir::Etc::preferencesparts "/var/empty";
 
     def target_by_image(self, image: str) -> str:
         return self._images[image]['target']
+
+    def prerequisites_by_image(self, image: str) -> List[str]:
+        return self._images[image].get('prerequisites', [])
 
     def skip_arch(self, image: str, arch: str) -> bool:
         return arch in self._images[image].get('exclude_arches', [])

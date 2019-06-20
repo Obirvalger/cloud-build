@@ -13,6 +13,17 @@ images:
     - qcow2
     exclude_arches:
     - aarch64
+  vm:
+    target: vm/systemd
+    kinds:
+    - qcow2
+    exclude_arches:
+    - aarch64
+    prerequisites:
+    - use/net/networkd
+    - use/net-ssh
+    - use/vmguest/kvm
+    - use/repo
   rootfs-minimal:
     target: ve/docker
     kinds:
