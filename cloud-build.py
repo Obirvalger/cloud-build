@@ -38,6 +38,7 @@ class CB:
 
         self.date = datetime.date.today().strftime('%Y%m%d')
         self.service_default_state = 'enabled'
+        self.created_scripts: List[str] = []
 
         self.ensure_dirs()
         logging.basicConfig(
@@ -47,6 +48,19 @@ class CB:
         self.log = logging.getLogger(PROG)
         self.log.setLevel(self.log_level)
         self.info(f'Start {PROG}')
+
+    def __del__(self) -> None:
+        def unlink(path):
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
+
+        for name in self.created_scripts:
+            unlink(name)
+        unlink(f'{self.work_dir}mkimage-profiles/conf.d/{PROG}.mk')
+
+        self.info(f'Finish {PROG}')
 
     def ensure_run_once(self):
         self.lock_file = open(self.data_dir + f'{PROG}.lock', 'w')
@@ -83,6 +97,7 @@ class CB:
 
         self._packages = cfg.get('packages', {})
         self._services = cfg.get('services', {})
+        self._scripts = cfg.get('scripts', {})
 
         try:
             self._remote = os.path.expanduser(cfg['remote'])
@@ -284,6 +299,13 @@ Dir::Etc::preferencesparts "/var/empty";
     def prerequisites_by_image(self, image: str) -> List[str]:
         return self._images[image].get('prerequisites', [])
 
+    def scripts_by_image(self, image: str) -> Dict[str, str]:
+        scripts = {}
+        for name, contents in self._scripts.items():
+            if name in self._images[image]['scripts']:
+                scripts[name] = contents
+        return scripts
+
     def skip_arch(self, image: str, arch: str) -> bool:
         return arch in self._images[image].get('exclude_arches', [])
 
@@ -405,11 +427,32 @@ Dir::Etc::preferencesparts "/var/empty";
                 if not re.search(f'-{self.date}-', tb):
                     os.unlink(tb)
 
+    def ensure_scripts(self, image):
+        for name in self.created_scripts:
+            os.unlink(name)
+
+        self.created_scripts = []
+
+        target_type = re.sub(r'(?:(\w+)/)?.*', r'\1',
+                             self.target_by_image(image))
+        if not target_type:
+            target_type = 'distro'
+        scripts_path = '''
+{}mkimage-profiles/features.in/build-{}/image-scripts.d/
+'''.format(self.work_dir, target_type).strip()
+        for name, content in self.scripts_by_image(image).items():
+            path = scripts_path + name
+            self.created_scripts.append(path)
+            with open(path, 'w') as f:
+                print(content, file=f)
+            os.chmod(path, 0o755)
+
     def create_images(self) -> None:
         self.clear_imager_dir()
         for branch in self.branches:
             images_in_branch = []
             for image in self.images:
+                self.ensure_scripts(image)
                 target = self.target_by_image(image)
                 for arch in self.arches_by_branch(branch):
                     if self.skip_arch(image, arch):

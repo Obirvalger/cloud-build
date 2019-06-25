@@ -32,6 +32,9 @@ images:
     target: ve/systemd-base
     kinds:
     - tar.xz
+    scripts:
+    - securetty
+    - var
 
 branches:
   Sisyphus:
@@ -62,4 +65,19 @@ branches:
     # - rootfs-minimal
     # exclude_branches:
     # - p8
+
+scripts:
+  securetty: |
+    #!/bin/sh
+
+    echo pts/0 >> /etc/securetty
+  var: |
+    #!/bin/sh
+
+    for dir in run lock; do
+        mkdir -p "/$dir"
+        mv /var/"$dir"/* "/$dir"
+        rmdir "/var/$dir"
+        ln -sf "/$dir" /var
+    done
 ...
