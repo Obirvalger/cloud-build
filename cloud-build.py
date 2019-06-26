@@ -301,9 +301,18 @@ Dir::Etc::preferencesparts "/var/empty";
 
     def scripts_by_image(self, image: str) -> Dict[str, str]:
         scripts = {}
-        for name, contents in self._scripts.items():
-            if name in self._images[image]['scripts']:
-                scripts[name] = contents
+        for name, value in self._scripts.items():
+            number = value.get('number')
+            if (
+                value.get('global', False)
+                and name not in self._images[image].get('no_scripts', [])
+                or name in self._images[image].get('scripts', [])
+            ):
+                if number is not None:
+                    if isinstance(number, int):
+                        number = f'{number:02}'
+                    name = f'{number}-{name}'
+                scripts[name] = value['contents']
         return scripts
 
     def skip_arch(self, image: str, arch: str) -> bool:

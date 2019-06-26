@@ -28,13 +28,14 @@ images:
     target: ve/docker
     kinds:
     - tar.xz
+    no_scripts:
+    - var
   rootfs-systemd:
     target: ve/systemd-base
     kinds:
     - tar.xz
     scripts:
     - securetty
-    - var
 
 branches:
   Sisyphus:
@@ -67,17 +68,23 @@ branches:
     # - p8
 
 scripts:
-  securetty: |
-    #!/bin/sh
+  securetty:
+    contents: |
+      #!/bin/sh
 
-    echo pts/0 >> /etc/securetty
-  var: |
-    #!/bin/sh
+      echo pts/0 >> /etc/securetty
+    global: no
+    number: 1
+  var:
+    contents: |
+      #!/bin/sh
 
-    for dir in run lock; do
-        mkdir -p "/$dir"
-        mv /var/"$dir"/* "/$dir"
-        rmdir "/var/$dir"
-        ln -sf "/$dir" /var
-    done
+      for dir in run lock; do
+          mkdir -p "/$dir"
+          mv /var/"$dir"/* "/$dir"
+          rmdir "/var/$dir"
+          ln -sf "/$dir" /var
+      done
+    global: yes
+    number: 27
 ...
