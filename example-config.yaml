@@ -28,12 +28,16 @@ images:
     target: ve/docker
     kinds:
     - tar.xz
+    tests:
+    - method: docker
     no_scripts:
     - var
   rootfs-systemd:
     target: ve/systemd-base
     kinds:
     - tar.xz
+    tests:
+    - method: lxd
     scripts:
     - securetty
 

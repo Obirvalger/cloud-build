@@ -15,6 +15,8 @@ import sys
 
 import yaml
 
+from cloud_build.test_images import test_image
+
 PROG = 'cloud-build'
 
 
@@ -299,6 +301,9 @@ Dir::Etc::preferencesparts "/var/empty";
     def prerequisites_by_image(self, image: str) -> List[str]:
         return self._images[image].get('prerequisites', [])
 
+    def tests_by_image(self, image: str) -> List[Dict]:
+        return self._images[image].get('tests', [])
+
     def scripts_by_image(self, image: str) -> Dict[str, str]:
         scripts = {}
         for name, value in self._scripts.items():
@@ -473,6 +478,14 @@ Dir::Etc::preferencesparts "/var/empty";
                         )
                         image_path = self.image_path(image, branch, arch, kind)
                         self.copy_image(tarball, image_path)
+                        for test in self.tests_by_image(image):
+                            if not test_image(
+                                image=image_path,
+                                branch=branch,
+                                arch=arch,
+                                **test,
+                            ):
+                                self.error(f'Test for {image} failed')
                         images_in_branch.append(image_path)
             self.checksum_sign(images_in_branch)
 
