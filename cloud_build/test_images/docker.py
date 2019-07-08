@@ -17,7 +17,7 @@ CMD ["/bin/bash"]"""
     with open('Dockerfile', 'w') as f:
         f.write(dockerfile)
 
-    name = 'cloud_build_test_docker_image'
+    name = f'cloud_build_test_{abs(hash(image))}'
     commands = [
         f'docker build --rm --tag={name} .',
         f'docker run --rm {name}',
