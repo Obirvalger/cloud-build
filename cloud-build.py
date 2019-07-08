@@ -479,6 +479,7 @@ Dir::Etc::preferencesparts "/var/empty";
                         image_path = self.image_path(image, branch, arch, kind)
                         self.copy_image(tarball, image_path)
                         for test in self.tests_by_image(image):
+                            self.info(f'Test {image} {branch} {arch}')
                             if not test_image(
                                 image=image_path,
                                 branch=branch,
