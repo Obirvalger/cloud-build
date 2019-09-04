@@ -2,6 +2,7 @@
 
 from typing import Dict, List
 
+from pathlib import Path
 import argparse
 import contextlib
 import datetime
@@ -26,25 +27,25 @@ class CB:
     def __init__(self, config: str, system_datadir: str) -> None:
         self.parse_config(config)
 
-        data_dir = (os.getenv('XDG_DATA_HOME',
-                              os.path.expanduser('~/.local/share'))
-                    + f'/{PROG}/')
+        data_dir = (Path(os.getenv('XDG_DATA_HOME',
+                                   '~/.local/share')).expanduser()
+                    / f'{PROG}')
         self.data_dir = data_dir
 
         self.ensure_run_once()
 
-        self.images_dir = data_dir + 'images/'
-        self.work_dir = data_dir + 'work/'
-        self.out_dir = data_dir + 'out/'
+        self.images_dir = data_dir / 'images'
+        self.work_dir = data_dir / 'work'
+        self.out_dir = data_dir / 'out'
         self.system_datadir = system_datadir
 
         self.date = datetime.date.today().strftime('%Y%m%d')
         self.service_default_state = 'enabled'
-        self.created_scripts: List[str] = []
+        self.created_scripts: List[Path] = []
 
         self.ensure_dirs()
         logging.basicConfig(
-            filename=f'{data_dir}{PROG}.log',
+            filename=f'{data_dir}/{PROG}.log',
             format='%(levelname)s:%(asctime)s - %(message)s',
         )
         self.log = logging.getLogger(PROG)
@@ -60,12 +61,12 @@ class CB:
 
         for name in self.created_scripts:
             unlink(name)
-        unlink(f'{self.work_dir}mkimage-profiles/conf.d/{PROG}.mk')
+        unlink(self.work_dir / f'mkimage-profiles/conf.d/{PROG}.mk')
 
         self.info(f'Finish {PROG}')
 
     def ensure_run_once(self):
-        self.lock_file = open(self.data_dir + f'{PROG}.lock', 'w')
+        self.lock_file = open(self.data_dir / f'{PROG}.lock', 'w')
 
         try:
             fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -176,10 +177,10 @@ class CB:
                 if isinstance(value, str):
                     os.makedirs(value, exist_ok=True)
         for branch in self.branches:
-            os.makedirs(self.images_dir + branch, exist_ok=True)
+            os.makedirs(self.images_dir / branch, exist_ok=True)
 
     def generate_apt_files(self) -> None:
-        apt_dir = self.work_dir + 'apt'
+        apt_dir = self.work_dir / 'apt'
         os.makedirs(apt_dir, exist_ok=True)
         for branch in self.branches:
             for arch in self.arches_by_branch(branch):
@@ -387,23 +388,23 @@ Dir::Etc::preferencesparts "/var/empty";
         branch: str,
         arch: str,
         kind: str
-    ) -> str:
+    ) -> Path:
         self.ensure_mkimage_profiles()
 
         target = f'{target}_{self.escape_branch(branch)}'
         image = re.sub(r'.*/', '', target)
         full_target = f'{target}.{kind}'
-        tarball = f'{self.out_dir}{image}-{self.date}-{arch}.{kind}'
-        apt_dir = self.work_dir + 'apt'
-        with self.pushd(self.work_dir + 'mkimage-profiles'):
-            if os.path.exists(tarball):
+        tarball = self.out_dir / f'{image}-{self.date}-{arch}.{kind}'
+        apt_dir = self.work_dir / 'apt'
+        with self.pushd(self.work_dir / 'mkimage-profiles'):
+            if tarball.exists():
                 self.info(f'Skip building of {full_target} {arch}')
             else:
                 cmd = [
                     'make',
                     f'APTCONF={apt_dir}/apt.conf.{branch}.{arch}',
                     f'ARCH={arch}',
-                    f'IMAGE_OUTDIR={self.out_dir.rstrip("/")}',
+                    f'IMAGE_OUTDIR={self.out_dir}',
                     full_target,
                 ]
                 self.info(f'Begin building of {full_target} {arch}')
@@ -415,25 +416,28 @@ Dir::Etc::preferencesparts "/var/empty";
 
         return tarball
 
-    def image_path(self, image: str, branch: str, arch: str, kind: str) -> str:
-        path = '{}{}/alt-{}-{}-{}.{}'.format(
-            self.images_dir,
-            branch,
-            branch.lower(),
-            image,
-            arch,
-            kind,
+    def image_path(
+        self,
+        image: str,
+        branch: str,
+        arch: str,
+        kind: str
+    ) -> Path:
+        path = (
+            self.images_dir
+            / branch
+            / f'alt-{branch.lower()}-{image}-{arch}.{kind}'
         )
         return path
 
-    def copy_image(self, src: str, dst: str) -> None:
+    def copy_image(self, src: Path, dst: Path) -> None:
         os.link(src, dst)
 
     def clear_imager_dir(self):
         for branch in self.branches:
-            directory = f'{self.images_dir}{branch}'
-            for path in os.listdir(directory):
-                os.unlink(f'{directory}/{path}')
+            directory = self.images_dir / branch
+            for path in directory.glob('*'):
+                os.unlink(path)
 
     def remove_old_tarballs(self):
         with self.pushd(self.out_dir):
@@ -451,15 +455,18 @@ Dir::Etc::preferencesparts "/var/empty";
                              self.target_by_image(image))
         if not target_type:
             target_type = 'distro'
-        scripts_path = '''
-{}mkimage-profiles/features.in/build-{}/image-scripts.d/
-'''.format(self.work_dir, target_type).strip()
+        scripts_path = (
+            self.work_dir
+            / 'mkimage-profiles'
+            / 'features.in'
+            / f'build-{target_type}'
+            / 'image-scripts.d'
+        )
         for name, content in self.scripts_by_image(image).items():
-            path = scripts_path + name
-            self.created_scripts.append(path)
-            with open(path, 'w') as f:
-                print(content, file=f)
-            os.chmod(path, 0o755)
+            script = scripts_path / name
+            self.created_scripts.append(script)
+            script.write_text(content)
+            os.chmod(script, 0o755)
 
     def create_images(self) -> None:
         self.clear_imager_dir()
@@ -519,7 +526,7 @@ Dir::Etc::preferencesparts "/var/empty";
         self.create_images()
         for branch in self.branches:
             remote = self.remote(branch)
-            files = glob.glob(f'{self.images_dir}{branch}/*')
+            files = glob.glob(f'{self.images_dir}/{branch}/*')
             cmd = ['rsync', '-v'] + files + [remote]
             self.call(cmd)
 
