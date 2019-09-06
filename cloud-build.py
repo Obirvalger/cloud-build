@@ -438,7 +438,7 @@ Dir::Etc::preferencesparts "/var/empty";
     def clear_imager_dir(self):
         for branch in self.branches:
             directory = self.images_dir / branch
-            for path in directory.glob('*'):
+            for path in directory.iterdir():
                 os.unlink(path)
 
     def remove_old_tarballs(self):
