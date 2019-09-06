@@ -6,6 +6,8 @@ log_level: info
 bad_arches:
 - armh
 
+external_images: ~/external_images
+
 images:
   opennebula:
     target: vm/opennebula-systemd

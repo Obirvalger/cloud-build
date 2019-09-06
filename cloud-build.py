@@ -100,6 +100,10 @@ class CB:
 
         self.bad_arches = cfg.get('bad_arches', [])
 
+        self.external_images = cfg.get('external_images')
+        if self.external_images:
+            self.external_images = Path(self.external_images).expanduser()
+
         self._packages = cfg.get('packages', {})
         self._services = cfg.get('services', {})
         self._scripts = cfg.get('scripts', {})
@@ -497,6 +501,17 @@ Dir::Etc::preferencesparts "/var/empty";
                                 self.error(f'Test for {image} failed')
 
         self.remove_old_tarballs()
+
+    def copy_external_images(self):
+        if self.external_images:
+            for branch in os.listdir(self.external_images):
+                if branch not in self.branches:
+                    self.error(f'Unknown branch {branch} in external_images')
+
+                with self.pushd(self.external_images / branch):
+                    for image in os.listdir():
+                        self.copy_image(image,
+                                        self.images_dir / branch / image)
 
     def sign(self):
         sum_file = self.checksum_command.upper()
