@@ -34,6 +34,8 @@ class CB:
 
         self.ensure_run_once()
 
+        self.checksum_command = 'sha256sum'
+
         self.images_dir = data_dir / 'images'
         self.work_dir = data_dir / 'work'
         self.out_dir = data_dir / 'out'
@@ -471,7 +473,6 @@ Dir::Etc::preferencesparts "/var/empty";
     def create_images(self) -> None:
         self.clear_imager_dir()
         for branch in self.branches:
-            images_in_branch = []
             for image in self.images:
                 self.ensure_scripts(image)
                 target = self.target_by_image(image)
@@ -494,26 +495,24 @@ Dir::Etc::preferencesparts "/var/empty";
                                 **test,
                             ):
                                 self.error(f'Test for {image} failed')
-                        images_in_branch.append(image_path)
-            self.checksum_sign(images_in_branch)
 
         self.remove_old_tarballs()
 
-    def checksum_sign(self, images):
-        if len(images) == 0:
-            self.error('Empty list of images to checksum_sign')
+    def sign(self):
+        sum_file = self.checksum_command.upper()
+        for branch in self.branches():
+            with self.pushd(self.images_dir / branch):
+                files = [f
+                         for f in os.listdir()
+                         if not f.startswith(sum_file)]
+                string = ','.join(files)
 
-        sum_file = 'SHA256SUM'
-        with self.pushd(os.path.dirname(images[0])):
-            files = [os.path.basename(x) for x in images]
-            string = ','.join(files)
+                cmd = [self.checksum_command] + files
+                self.info(f'Calculate checksum of {string}')
+                self.call(cmd, stdout_to_file=sum_file)
 
-            cmd = ['sha256sum'] + files
-            self.info(f'Calculate checksum of {string}')
-            self.call(cmd, stdout_to_file=sum_file)
-
-            self.info(f'Sign checksum of {string}')
-            self.call(['gpg2', '--yes', '-basu', self.key, sum_file])
+                self.info(f'Sign checksum of {string}')
+                self.call(['gpg2', '--yes', '-basu', self.key, sum_file])
 
     def kick(self):
         remote = self._remote
@@ -523,12 +522,14 @@ Dir::Etc::preferencesparts "/var/empty";
             self.call(['ssh', host, 'kick'])
 
     def sync(self) -> None:
-        self.create_images()
         for branch in self.branches:
             remote = self.remote(branch)
             files = glob.glob(f'{self.images_dir}/{branch}/*')
-            cmd = ['rsync', '-v'] + files + [remote]
-            self.call(cmd)
+            if f'self.checksum_command.upper().asc' not in files:
+                self.error(f'No checksum signature in branch {branch}')
+            else:
+                cmd = ['rsync', '-v'] + files + [remote]
+                self.call(cmd)
 
         self.kick()
 
@@ -567,6 +568,8 @@ def parse_args():
 def main():
     args = parse_args()
     cloud_build = CB(args.config, args.data_dir)
+    cloud_build.create_images()
+    cloud_build.sign()
     cloud_build.sync()
 
 
