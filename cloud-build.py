@@ -540,11 +540,8 @@ Dir::Etc::preferencesparts "/var/empty";
         for branch in self.branches:
             remote = self.remote(branch)
             files = glob.glob(f'{self.images_dir}/{branch}/*')
-            if f'self.checksum_command.upper().asc' not in files:
-                self.error(f'No checksum signature in branch {branch}')
-            else:
-                cmd = ['rsync', '-v'] + files + [remote]
-                self.call(cmd)
+            cmd = ['rsync', '-v'] + files + [remote]
+            self.call(cmd)
 
         self.kick()
 
