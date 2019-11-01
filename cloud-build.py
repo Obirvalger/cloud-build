@@ -24,8 +24,9 @@ PROG = 'cloud-build'
 class CB:
     """class for building cloud images"""
 
-    def __init__(self, config: str, system_datadir: str) -> None:
-        self.parse_config(config)
+    def __init__(self, args: Dict) -> None:
+        self.parse_config(args.config)
+        self.args = args
 
         data_dir = (Path(os.getenv('XDG_DATA_HOME',
                                    '~/.local/share')).expanduser()
@@ -39,7 +40,7 @@ class CB:
         self.images_dir = data_dir / 'images'
         self.work_dir = data_dir / 'work'
         self.out_dir = data_dir / 'out'
-        self.system_datadir = system_datadir
+        self.system_datadir = args.data_dir
 
         self.date = datetime.date.today().strftime('%Y%m%d')
         self.service_default_state = 'enabled'
@@ -490,15 +491,16 @@ Dir::Etc::preferencesparts "/var/empty";
                         )
                         image_path = self.image_path(image, branch, arch, kind)
                         self.copy_image(tarball, image_path)
-                        for test in self.tests_by_image(image):
-                            self.info(f'Test {image} {branch} {arch}')
-                            if not cloud_build.image_tests.test(
-                                image=image_path,
-                                branch=branch,
-                                arch=arch,
-                                **test,
-                            ):
-                                self.error(f'Test for {image} failed')
+                        if not self.args.no_tests:
+                            for test in self.tests_by_image(image):
+                                self.info(f'Test {image} {branch} {arch}')
+                                if not cloud_build.image_tests.test(
+                                    image=image_path,
+                                    branch=branch,
+                                    arch=arch,
+                                    **test,
+                                ):
+                                    self.error(f'Test for {image} failed')
 
         self.remove_old_tarballs()
 
@@ -569,6 +571,11 @@ def parse_args():
         default=f'/usr/share/{PROG}',
         help='system data directory',
     )
+    parser.add_argument(
+        '--no-tests',
+        action='store_true',
+        help='disable running tests',
+    )
     args = parser.parse_args()
 
     if not args.data_dir.endswith('/'):
@@ -579,7 +586,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cloud_build = CB(args.config, args.data_dir)
+    cloud_build = CB(args)
     cloud_build.create_images()
     cloud_build.sign()
     cloud_build.sync()
