@@ -515,7 +515,7 @@ Dir::Etc::preferencesparts "/var/empty";
 
     def sign(self):
         sum_file = self.checksum_command.upper()
-        for branch in self.branches():
+        for branch in self.branches:
             with self.pushd(self.images_dir / branch):
                 files = [f
                          for f in os.listdir()
