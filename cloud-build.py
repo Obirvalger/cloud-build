@@ -16,7 +16,7 @@ import sys
 
 import yaml
 
-from cloud_build.test_images import test_image
+import cloud_build.image_tests
 
 PROG = 'cloud-build'
 
@@ -492,7 +492,7 @@ Dir::Etc::preferencesparts "/var/empty";
                         self.copy_image(tarball, image_path)
                         for test in self.tests_by_image(image):
                             self.info(f'Test {image} {branch} {arch}')
-                            if not test_image(
+                            if not cloud_build.image_tests.test(
                                 image=image_path,
                                 branch=branch,
                                 arch=arch,

@@ -20,7 +20,7 @@ def pushtmpd():
         shutil.rmtree(tmpdir)
 
 
-def test_image(method, image, branch, arch):
+def test(method, image, branch, arch):
     if arch not in ['x86_64', 'i586']:
         return True
 
