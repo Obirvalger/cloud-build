@@ -512,6 +512,7 @@ Dir::Etc::preferencesparts "/var/empty";
 
                 with self.pushd(self.external_images / branch):
                     for image in os.listdir():
+                        self.info(f'Copy external image {image} in {branch}')
                         self.copy_image(image,
                                         self.images_dir / branch / image)
 
@@ -588,6 +589,7 @@ def main():
     args = parse_args()
     cloud_build = CB(args)
     cloud_build.create_images()
+    cloud_build.copy_external_images()
     cloud_build.sign()
     cloud_build.sync()
 
