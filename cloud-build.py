@@ -439,7 +439,7 @@ Dir::Etc::preferencesparts "/var/empty";
     def copy_image(self, src: Path, dst: Path) -> None:
         os.link(src, dst)
 
-    def clear_imager_dir(self):
+    def clear_images_dir(self):
         for branch in self.branches:
             directory = self.images_dir / branch
             for path in directory.iterdir():
@@ -475,7 +475,7 @@ Dir::Etc::preferencesparts "/var/empty";
             os.chmod(script, 0o755)
 
     def create_images(self) -> None:
-        self.clear_imager_dir()
+        self.clear_images_dir()
         for branch in self.branches:
             for image in self.images:
                 self.ensure_scripts(image)
