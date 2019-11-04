@@ -180,7 +180,7 @@ class CB:
         for attr in dir(self):
             if attr.endswith('_dir'):
                 value = getattr(self, attr)
-                if isinstance(value, str):
+                if isinstance(value, str) or isinstance(value, os.PathLike):
                     os.makedirs(value, exist_ok=True)
         for branch in self.branches:
             os.makedirs(self.images_dir / branch, exist_ok=True)
