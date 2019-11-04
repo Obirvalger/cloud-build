@@ -33,8 +33,6 @@ class CB:
                     / f'{PROG}')
         self.data_dir = data_dir
 
-        self.ensure_run_once()
-
         self.checksum_command = 'sha256sum'
 
         self.images_dir = data_dir / 'images'
@@ -47,6 +45,7 @@ class CB:
         self.created_scripts: List[Path] = []
 
         self.ensure_dirs()
+        self.ensure_run_once()
         logging.basicConfig(
             filename=f'{data_dir}/{PROG}.log',
             format='%(levelname)s:%(asctime)s - %(message)s',
