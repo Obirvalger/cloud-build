@@ -7,7 +7,6 @@ import argparse
 import contextlib
 import datetime
 import fcntl
-import glob
 import logging
 import os
 import re
@@ -541,8 +540,13 @@ Dir::Etc::preferencesparts "/var/empty";
     def sync(self) -> None:
         for branch in self.branches:
             remote = self.remote(branch)
-            files = glob.glob(f'{self.images_dir}/{branch}/*')
-            cmd = ['rsync', '-v'] + files + [remote]
+            cmd = [
+                'rsync',
+                f'{self.images_dir}/{branch}/',
+                '-rv',
+                '--delete',
+                remote,
+            ]
             self.call(cmd)
 
         self.kick()
