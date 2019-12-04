@@ -99,9 +99,9 @@ class CB:
 
         self.bad_arches = cfg.get('bad_arches', [])
 
-        self.external_images = cfg.get('external_images')
-        if self.external_images:
-            self.external_images = Path(self.external_images).expanduser()
+        self.external_files = cfg.get('external_files')
+        if self.external_files:
+            self.external_files = Path(self.external_files).expanduser()
 
         self._packages = cfg.get('packages', {})
         self._services = cfg.get('services', {})
@@ -502,13 +502,13 @@ Dir::Etc::preferencesparts "/var/empty";
 
         self.remove_old_tarballs()
 
-    def copy_external_images(self):
-        if self.external_images:
-            for branch in os.listdir(self.external_images):
+    def copy_external_files(self):
+        if self.external_files:
+            for branch in os.listdir(self.external_files):
                 if branch not in self.branches:
-                    self.error(f'Unknown branch {branch} in external_images')
+                    self.error(f'Unknown branch {branch} in external_files')
 
-                with self.pushd(self.external_images / branch):
+                with self.pushd(self.external_files / branch):
                     for image in os.listdir():
                         self.info(f'Copy external image {image} in {branch}')
                         self.copy_image(image,
@@ -592,7 +592,7 @@ def main():
     args = parse_args()
     cloud_build = CB(args)
     cloud_build.create_images()
-    cloud_build.copy_external_images()
+    cloud_build.copy_external_files()
     cloud_build.sign()
     cloud_build.sync()
 

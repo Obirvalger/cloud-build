@@ -6,7 +6,7 @@ log_level: info
 bad_arches:
 - armh
 
-external_images: ~/external_images
+external_files: ~/external_files
 
 images:
   opennebula:
