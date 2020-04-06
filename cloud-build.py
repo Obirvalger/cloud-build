@@ -170,7 +170,8 @@ class CB:
                 rc = p.wait()
                 maybe_fail(string, rc)
                 with open(stdout_to_file, 'w') as f:
-                    f.write(p.stdout.read().decode())
+                    if p.stdout:
+                        f.write(p.stdout.read().decode())
             else:
                 rc = subprocess.call(cmd)
                 maybe_fail(string, rc)
