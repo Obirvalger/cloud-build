@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from pathlib import Path
 import argparse
@@ -23,7 +23,7 @@ PROG = 'cloud-build'
 class CB:
     """class for building cloud images"""
 
-    def __init__(self, args: Dict) -> None:
+    def __init__(self, args: Any) -> None:
         self.parse_config(args.config)
         self.args = args
 
