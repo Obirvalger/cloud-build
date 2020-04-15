@@ -24,7 +24,7 @@ class CB:
 
     def __init__(self, args: Any) -> None:
         self.parse_config(args.config)
-        self.args = args
+        self.no_tests = getattr(args, 'no_tests', False)
 
         data_dir = (Path(os.getenv('XDG_DATA_HOME',
                                    '~/.local/share')).expanduser()
@@ -488,7 +488,7 @@ Dir::Etc::preferencesparts "/var/empty";
                         )
                         image_path = self.image_path(image, branch, arch, kind)
                         self.copy_image(tarball, image_path)
-                        if not self.args.no_tests:
+                        if not self.no_tests:
                             for test in self.tests_by_image(image):
                                 self.info(f'Test {image} {branch} {arch}')
                                 if not cloud_build.image_tests.test(
