@@ -198,7 +198,7 @@ Dir::Etc::SourceList "{apt_dir}/sources.list.{branch}.{arch}";
 Dir::Etc::SourceParts "/var/empty";
 Dir::Etc::preferences "/dev/null";
 Dir::Etc::preferencesparts "/var/empty";
-'''
+'''.lstrip()
                     f.write(apt_conf)
 
                 with open(f'{apt_dir}/sources.list.{branch}.{arch}', 'w') as f:
