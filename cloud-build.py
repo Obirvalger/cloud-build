@@ -1,18 +1,10 @@
 #!/usr/bin/python3
 
 import argparse
-import os
 
 from cloud_build import CB
 
 PROG = 'cloud-build'
-
-
-def get_data_dir() -> str:
-    data_dir = (os.getenv('XDG_DATA_HOME',
-                          os.path.expanduser('~/.local/share'))
-                + f'/{PROG}/')
-    return data_dir
 
 
 def parse_args():
@@ -26,20 +18,11 @@ def parse_args():
         help='path to config',
     )
     parser.add_argument(
-        '-d',
-        '--data-dir',
-        default=f'/usr/share/{PROG}',
-        help='system data directory',
-    )
-    parser.add_argument(
         '--no-tests',
         action='store_true',
         help='disable running tests',
     )
     args = parser.parse_args()
-
-    if not args.data_dir.endswith('/'):
-        args.data_dir += '/'
 
     return args
 

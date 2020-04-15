@@ -36,7 +36,6 @@ class CB:
         self.images_dir = data_dir / 'images'
         self.work_dir = data_dir / 'work'
         self.out_dir = data_dir / 'out'
-        self.system_datadir = args.data_dir
 
         self.date = datetime.date.today().strftime('%Y%m%d')
         self.service_default_state = 'enabled'
