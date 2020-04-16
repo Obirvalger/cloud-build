@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Union
 
 from pathlib import Path
 import contextlib
@@ -18,6 +18,9 @@ import cloud_build.image_tests
 
 PROG = 'cloud-build'
 
+# types
+PathLike = Union[Path, str]
+
 
 class CB:
     """class for building cloud images"""
@@ -27,8 +30,8 @@ class CB:
         self.no_tests = getattr(args, 'no_tests', False)
         self._create_remote_dirs = getattr(args, 'create_remote_dirs', False)
 
-        data_dir = (Path(os.getenv('XDG_DATA_HOME',
-                                   '~/.local/share')).expanduser()
+        data_dir = (Path(self.expand_path(os.getenv('XDG_DATA_HOME',
+                                                    '~/.local/share')))
                     / f'{PROG}')
         self.data_dir = data_dir
 
@@ -65,6 +68,13 @@ class CB:
 
         self.info(f'Finish {PROG}')
 
+    def expand_path(self, path: PathLike):
+        result = os.path.expanduser(os.path.expandvars(path))
+        if isinstance(path, Path):
+            return Path(result)
+        else:
+            return result
+
     def ensure_run_once(self):
         self.lock_file = open(self.data_dir / f'{PROG}.lock', 'w')
 
@@ -87,7 +97,7 @@ class CB:
         with open(config) as f:
             cfg = yaml.safe_load(f)
 
-        self.mkimage_profiles_git = os.path.expanduser(
+        self.mkimage_profiles_git = self.expand_path(
             cfg.get('mkimage_profiles_git', '')
         )
 
@@ -100,14 +110,14 @@ class CB:
 
         self.external_files = cfg.get('external_files')
         if self.external_files:
-            self.external_files = Path(self.external_files).expanduser()
+            self.external_files = self.expand_path(Path(self.external_files))
 
         self._packages = cfg.get('packages', {})
         self._services = cfg.get('services', {})
         self._scripts = cfg.get('scripts', {})
 
         try:
-            self._remote = os.path.expanduser(cfg['remote'])
+            self._remote = self.expand_path(cfg['remote'])
             self.key = cfg['key']
             if isinstance(self.key, int):
                 self.key = '{:X}'.format(self.key)
