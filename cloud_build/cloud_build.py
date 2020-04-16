@@ -25,6 +25,7 @@ class CB:
     def __init__(self, args: Any) -> None:
         self.parse_config(args.config)
         self.no_tests = getattr(args, 'no_tests', False)
+        self._create_remote_dirs = getattr(args, 'create_remote_dirs', False)
 
         data_dir = (Path(os.getenv('XDG_DATA_HOME',
                                    '~/.local/share')).expanduser()
@@ -539,6 +540,8 @@ Dir::Etc::preferencesparts "/var/empty";
     def sync(self) -> None:
         for branch in self.branches:
             remote = self.remote(branch)
+            if self._create_remote_dirs:
+                os.makedirs(remote, exist_ok=True)
             cmd = [
                 'rsync',
                 f'{self.images_dir}/{branch}/',
