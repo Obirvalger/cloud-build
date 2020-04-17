@@ -26,6 +26,7 @@ class CB:
     """class for building cloud images"""
 
     def __init__(self, args: Any) -> None:
+        self.initialized = False
         self.parse_config(args.config)
         self.no_tests = getattr(args, 'no_tests', False)
         self._create_remote_dirs = getattr(args, 'create_remote_dirs', False)
@@ -54,8 +55,12 @@ class CB:
         self.log = logging.getLogger(PROG)
         self.log.setLevel(self.log_level)
         self.info(f'Start {PROG}')
+        self.initialized = True
 
     def __del__(self) -> None:
+        if not self.initialized:
+            return
+
         def unlink(path):
             try:
                 os.unlink(path)
@@ -94,8 +99,13 @@ class CB:
         os.chdir(previous_dir)
 
     def parse_config(self, config: str) -> None:
-        with open(config) as f:
-            cfg = yaml.safe_load(f)
+        try:
+            with open(config) as f:
+                cfg = yaml.safe_load(f)
+        except FileNotFoundError as e:
+            print(f'Could not find config file: `{e.filename}`',
+                  file=sys.stdout)
+            sys.exit(1)
 
         self.mkimage_profiles_git = self.expand_path(
             cfg.get('mkimage_profiles_git', '')
