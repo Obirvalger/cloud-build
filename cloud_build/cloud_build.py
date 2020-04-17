@@ -59,6 +59,8 @@ class CB:
 
     def __del__(self) -> None:
         if not self.initialized:
+            if getattr(self, 'lock_file', False):
+                self.lock_file.close()
             return
 
         def unlink(path):
@@ -72,6 +74,7 @@ class CB:
         unlink(self.work_dir / f'mkimage-profiles/conf.d/{PROG}.mk')
 
         self.info(f'Finish {PROG}')
+        self.lock_file.close()
 
     def expand_path(self, path: PathLike):
         result = os.path.expanduser(os.path.expandvars(path))
