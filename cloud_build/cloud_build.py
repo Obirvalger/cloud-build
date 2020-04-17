@@ -339,6 +339,9 @@ Dir::Etc::preferencesparts "/var/empty";
     def skip_arch(self, image: str, arch: str) -> bool:
         return arch in self._images[image].get('exclude_arches', [])
 
+    def skip_branch(self, image: str, branch: str) -> bool:
+        return branch in self._images[image].get('exclude_branches', [])
+
     def get_items(
         self,
         data: Dict,
@@ -487,6 +490,8 @@ Dir::Etc::preferencesparts "/var/empty";
         self.clear_images_dir()
         for branch in self.branches:
             for image in self.images:
+                if self.skip_branch(image, branch):
+                    continue
                 self.ensure_scripts(image)
                 target = self.target_by_image(image)
                 for arch in self.arches_by_branch(branch):
