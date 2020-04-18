@@ -196,6 +196,8 @@ class CB:
                 with open(stdout_to_file, 'w') as f:
                     if p.stdout:
                         f.write(p.stdout.read().decode())
+                    if p.stdout is not None:
+                        p.stdout.close()
             else:
                 rc = subprocess.call(cmd)
                 maybe_fail(string, rc)
