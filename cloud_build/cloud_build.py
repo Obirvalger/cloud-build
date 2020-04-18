@@ -27,6 +27,7 @@ class CB:
 
     def __init__(self, args: Any) -> None:
         self.initialized = False
+        self._save_cwd = os.getcwd()
         self.parse_config(args.config)
         self.no_tests = getattr(args, 'no_tests', False)
         self._create_remote_dirs = getattr(args, 'create_remote_dirs', False)
@@ -73,6 +74,7 @@ class CB:
             unlink(name)
         unlink(self.work_dir / f'mkimage-profiles/conf.d/{PROG}.mk')
 
+        os.chdir(self._save_cwd)
         self.info(f'Finish {PROG}')
         self.lock_file.close()
 
