@@ -1,0 +1,90 @@
+---
+remote: '/tmp/cloud-build/images/{branch}/cloud'
+key: 0x00000000
+log_level: debug
+
+external_files: /tmp/cloud-build/external_files
+
+bad_arches:
+- armh
+
+images:
+  opennebula:
+    target: vm/opennebula-systemd
+    kinds:
+    - qcow2
+    exclude_arches:
+    - aarch64
+    - armh
+    - ppc64le
+  cloud:
+    target: vm/cloud-systemd
+    kinds:
+    - img
+    - qcow2
+    exclude_arches:
+    - armh
+    - ppc64le
+    exclude_branches:
+    - p8
+  rootfs-minimal:
+    target: ve/docker
+    kinds:
+    - tar.xz
+    tests:
+    - method: docker
+  rootfs-systemd:
+    target: ve/systemd-base
+    kinds:
+    - tar.xz
+    tests:
+    - method: lxd
+    scripts:
+    - securetty
+  rootfs-sysvinit:
+    target: ve/base
+    kinds:
+    - tar.xz
+    tests:
+    - method: lxd
+    scripts:
+    - securetty
+    packages:
+    - glibc-gconv-modules
+    - glibc-locales
+    - tzdata
+    prerequisites:
+    - use/net-ssh
+    - use/net/dhcp
+
+branches:
+  Sisyphus:
+    arches:
+      i586:
+      x86_64:
+      aarch64:
+      ppc64le:
+      armh:
+        repository_url: file:///space/ALT/{branch}-{arch}
+  p9:
+    arches:
+      i586:
+      x86_64:
+      aarch64:
+      ppc64le:
+    branding: alt-starterkit
+  p8:
+    arches:
+      i586:
+      x86_64:
+    branding: alt-starterkit
+
+scripts:
+  securetty:
+    contents: |
+      #!/bin/sh
+
+      echo pts/0 >> /etc/securetty
+    global: no
+    number: 1
+...
