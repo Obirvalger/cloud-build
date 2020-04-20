@@ -22,6 +22,10 @@ PROG = 'cloud-build'
 PathLike = Union[Path, str]
 
 
+class Error(Exception):
+    pass
+
+
 class CB:
     """class for building cloud images"""
 
@@ -48,13 +52,13 @@ class CB:
         self.created_scripts: List[Path] = []
 
         self.ensure_dirs()
-        self.ensure_run_once()
         logging.basicConfig(
             filename=f'{data_dir}/{PROG}.log',
             format='%(levelname)s:%(asctime)s - %(message)s',
         )
         self.log = logging.getLogger(PROG)
         self.log.setLevel(self.log_level)
+        self.ensure_run_once()
         self.info(f'Start {PROG}')
         self.initialized = True
 
@@ -91,8 +95,7 @@ class CB:
         try:
             fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:  # already locked
-            print(f'{PROG} already running', file=sys.stderr)
-            exit(3)
+            self.error(f'{PROG} already running')
 
     @contextlib.contextmanager
     def pushd(self, new_dir):
@@ -154,7 +157,7 @@ class CB:
 
     def error(self, msg: str) -> None:
         self.log.error(msg)
-        raise Exception(msg)
+        raise Error(msg)
 
     def remote(self, branch: str) -> str:
         return self._remote.format(branch=branch)

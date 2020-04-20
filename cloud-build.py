@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
 import argparse
+import sys
 
-from cloud_build import CB
+import cloud_build
 
 PROG = 'cloud-build'
 
@@ -29,12 +30,16 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cloud_build = CB(args)
-    cloud_build.create_images()
-    cloud_build.copy_external_files()
-    cloud_build.sign()
-    cloud_build.sync()
+    cb = cloud_build.CB(args)
+    cb.create_images()
+    cb.copy_external_files()
+    cb.sign()
+    cb.sync()
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except cloud_build.Error as e:
+        print(e, file=sys.stdout)
+        exit(1)
