@@ -30,7 +30,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cb = cloud_build.CB(args)
+    cb = cloud_build.CB(config=args.config, no_tests=args.no_tests)
     cb.create_images()
     cb.copy_external_files()
     cb.sign()

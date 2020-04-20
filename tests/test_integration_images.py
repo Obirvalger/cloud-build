@@ -1,6 +1,5 @@
 from contextlib import ExitStack
 from pathlib import Path
-from types import SimpleNamespace
 from unittest import TestCase
 from unittest import mock
 
@@ -28,11 +27,11 @@ class TestIntegrationImages(TestCase):
                 {'XDG_DATA_HOME': cls.work_dir.as_posix()}
             ))
 
-            cloud_build = CB(SimpleNamespace(
+            cloud_build = CB(
                 config='tests/test_integration_images.yaml',
                 no_tests=True,
                 create_remote_dirs=True,
-            ))
+            )
             cloud_build.create_images()
             cloud_build.copy_external_files()
             cloud_build.sign()

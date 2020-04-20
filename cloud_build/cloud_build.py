@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Dict, List, Any, Union
+from typing import Dict, List, Union
 
 from pathlib import Path
 import contextlib
@@ -29,12 +29,17 @@ class Error(Exception):
 class CB:
     """class for building cloud images"""
 
-    def __init__(self, args: Any) -> None:
+    def __init__(
+            self,
+            config,
+            no_tests=False,
+            create_remote_dirs=False
+    ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
-        self.parse_config(args.config)
-        self.no_tests = getattr(args, 'no_tests', False)
-        self._create_remote_dirs = getattr(args, 'create_remote_dirs', False)
+        self.parse_config(config)
+        self.no_tests = no_tests
+        self._create_remote_dirs = create_remote_dirs
 
         data_dir = (Path(self.expand_path(os.getenv('XDG_DATA_HOME',
                                                     '~/.local/share')))
