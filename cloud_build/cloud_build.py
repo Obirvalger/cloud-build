@@ -10,7 +10,6 @@ import logging
 import os
 import re
 import subprocess
-import sys
 
 import yaml
 
@@ -105,7 +104,9 @@ class CB:
         try:
             fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:  # already locked
-            self.error(f'{PROG} already running')
+            dd = self.data_dir
+            msg = f'Program {PROG} already running in `{dd}` directory'
+            self.error(msg)
 
     @contextlib.contextmanager
     def pushd(self, new_dir):
@@ -120,10 +121,9 @@ class CB:
         try:
             with open(config) as f:
                 cfg = yaml.safe_load(f)
-        except FileNotFoundError as e:
-            print(f'Could not find config file: `{e.filename}`',
-                  file=sys.stdout)
-            sys.exit(1)
+        except OSError as e:
+            msg = f'Could not read config file `{e.filename}`: {e.strerror}'
+            raise Error(msg)
 
         self.mkimage_profiles_git = self.expand_path(
             cfg.get('mkimage_profiles_git', '')
@@ -156,8 +156,7 @@ class CB:
                                     for k, v in branch['arches'].items()}
         except KeyError as e:
             msg = f'Required parameter {e} does not set in config'
-            print(msg, file=sys.stderr)
-            raise Exception(msg)
+            raise Error(msg)
 
     def info(self, msg: str) -> None:
         self.log.info(msg)
