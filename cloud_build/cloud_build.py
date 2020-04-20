@@ -88,7 +88,10 @@ class CB:
         unlink(self.work_dir / f'mkimage-profiles/conf.d/{PROG}.mk')
 
         os.chdir(self._save_cwd)
-        self.info(f'Finish {PROG}')
+        try:
+            self.info(f'Finish {PROG}')
+        except FileNotFoundError:
+            pass
         self.lock_file.close()
 
     def expand_path(self, path: PathLike):
