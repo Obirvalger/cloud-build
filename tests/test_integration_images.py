@@ -1,21 +1,19 @@
-#!/usr/bin/python3
-
 from contextlib import ExitStack
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import TestCase
 from unittest import mock
 
 import os
 import shutil
-import unittest
 
-from cloud_build.cloud_build import CB
+from cloud_build import CB
 from tests.call import Call
 
 
-class TestCommon(unittest.TestCase):
+class TestIntegrationImages(TestCase):
     def setUp(self):
-        self.images = TestCommon.images
+        self.images = self.__class__.images
 
     @classmethod
     def setUpClass(cls):
