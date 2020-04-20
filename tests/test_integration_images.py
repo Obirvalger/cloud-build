@@ -22,13 +22,10 @@ class TestIntegrationImages(TestCase):
 
         with ExitStack() as stack:
             stack.enter_context(mock.patch('subprocess.call', Call()))
-            stack.enter_context(mock.patch.dict(
-                'os.environ',
-                {'XDG_DATA_HOME': cls.work_dir.as_posix()}
-            ))
 
             cloud_build = CB(
                 config='tests/test_integration_images.yaml',
+                data_dir=(cls.work_dir / 'cloud_build').as_posix(),
                 no_tests=True,
                 create_remote_dirs=True,
             )

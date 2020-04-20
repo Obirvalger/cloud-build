@@ -32,6 +32,8 @@ class CB:
     def __init__(
             self,
             config,
+            *,
+            data_dir=None,
             no_tests=False,
             create_remote_dirs=False
     ) -> None:
@@ -41,9 +43,12 @@ class CB:
         self.no_tests = no_tests
         self._create_remote_dirs = create_remote_dirs
 
-        data_dir = (Path(self.expand_path(os.getenv('XDG_DATA_HOME',
-                                                    '~/.local/share')))
-                    / f'{PROG}')
+        if not data_dir:
+            data_dir = (Path(self.expand_path(os.getenv('XDG_DATA_HOME',
+                                                        '~/.local/share')))
+                        / f'{PROG}')
+        else:
+            data_dir = Path(data_dir)
         self.data_dir = data_dir
 
         self.checksum_command = 'sha256sum'
