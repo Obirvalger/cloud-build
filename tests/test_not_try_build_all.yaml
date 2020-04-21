@@ -1,0 +1,23 @@
+---
+remote: '/var/empty'
+key: 0x00000000
+
+try_build_all: False
+
+images:
+  rootfs-minimal:
+    target: ve/docker
+    kinds:
+    - tar.xz
+
+branches:
+  Sisyphus:
+    arches:
+      x86_64:
+      aarch64:
+  p9:
+    arches:
+      x86_64:
+      aarch64:
+    branding: alt-starterkit
+...

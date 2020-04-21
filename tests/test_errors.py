@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest import mock
 
 import shutil
 import tempfile
@@ -6,7 +7,9 @@ import tempfile
 import yaml
 
 from cloud_build import CB
-from cloud_build import Error
+from cloud_build import Error, BuildError, MultipleBuildErrors
+
+import tests.call as call
 
 
 def update(old_dict, kwargs):
@@ -57,3 +60,39 @@ class TestErrors(TestCase):
         cb = CB(**self.kwargs)  # noqa F841
         regex = 'already running'
         self.assertRaisesRegex(Error, regex, CB, **self.kwargs)
+
+    def test_try_build_all(self):
+        def cond(args):
+            return args[1].endswith('aarch64')
+        ds = {'make': [call.return_d(0, cond=cond), call.nop_d(cond=cond)]}
+        with mock.patch('subprocess.call', call.Call(decorators=ds)):
+            cloud_build = CB(
+                config='tests/test_try_build_all.yaml',
+                data_dir=self.kwargs['data_dir'],
+                no_tests=True,
+                create_remote_dirs=True,
+            )
+            regex = r'build.*:'
+            self.assertRaisesRegex(
+                MultipleBuildErrors,
+                regex,
+                cloud_build.create_images
+            )
+
+    def test_not_try_build_all(self):
+        def cond(args):
+            return args[1].endswith('aarch64')
+        ds = {'make': [call.return_d(0, cond=cond), call.nop_d(cond=cond)]}
+        with mock.patch('subprocess.call', call.Call(decorators=ds)):
+            cloud_build = CB(
+                config='tests/test_not_try_build_all.yaml',
+                data_dir=self.kwargs['data_dir'],
+                no_tests=True,
+                create_remote_dirs=True,
+            )
+            regex = r'build.*aarch64'
+            self.assertRaisesRegex(
+                BuildError,
+                regex,
+                cloud_build.create_images
+            )
