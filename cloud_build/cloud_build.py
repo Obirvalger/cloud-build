@@ -25,6 +25,25 @@ class Error(Exception):
     pass
 
 
+class BuildError(Error):
+    def __init__(self, target: str, arch: str):
+        self.target = target
+        self.arch = arch
+
+    def __str__(self):
+        return f'Fail building of {self.target} {self.arch}'
+
+
+class MultipleBuildErrors(Error):
+    def __init__(self, build_errors: List[BuildError]):
+        self.build_errors = build_errors
+
+    def __str__(self):
+        s = 'Fail building of the next targets:\n'
+        s += '\n'.join(f'  {be.target} {be.arch}' for be in self.build_errors)
+        return s
+
+
 class CB:
     """class for building cloud images"""
 
@@ -59,6 +78,7 @@ class CB:
         self.date = datetime.date.today().strftime('%Y%m%d')
         self.service_default_state = 'enabled'
         self.created_scripts: List[Path] = []
+        self._build_errors: List[BuildError] = []
 
         self.ensure_dirs()
         logging.basicConfig(
@@ -137,6 +157,8 @@ class CB:
         self._repository_url = cfg.get('repository_url',
                                        'file:///space/ALT/{branch}')
 
+        self.try_build_all = cfg.get('try_build_all', False)
+
         self.bad_arches = cfg.get('bad_arches', [])
 
         self.external_files = cfg.get('external_files')
@@ -167,9 +189,13 @@ class CB:
     def debug(self, msg: str) -> None:
         self.log.debug(msg)
 
-    def error(self, msg: str) -> None:
-        self.log.error(msg)
-        raise Error(msg)
+    def error(self, arg: Union[str, Error]) -> None:
+        if isinstance(arg, Error):
+            err = arg
+        else:
+            err = Error(arg)
+        self.log.error(err)
+        raise err
 
     def remote(self, branch: str) -> str:
         return self._remote.format(branch=branch)
@@ -432,6 +458,12 @@ Dir::Etc::preferencesparts "/var/empty";
             self.service_default_state,
         )
 
+    def build_failed(self, target, arch):
+        if self.try_build_all:
+            self._build_errors.append(BuildError(target, arch))
+        else:
+            self.error(BuildError(target, arch))
+
     def build_tarball(
         self,
         target: str,
@@ -462,7 +494,8 @@ Dir::Etc::preferencesparts "/var/empty";
                 if os.path.exists(tarball):
                     self.info(f'End building of {full_target} {arch}')
                 else:
-                    self.error(f'Fail building of {full_target} {arch}')
+                    self.build_failed(full_target, arch)
+                    tarball = None
 
         return tarball
 
@@ -518,6 +551,10 @@ Dir::Etc::preferencesparts "/var/empty";
             script.write_text(content)
             os.chmod(script, 0o755)
 
+    def ensure_build_success(self) -> None:
+        if self._build_errors:
+            self.error(MultipleBuildErrors(self._build_errors))
+
     def create_images(self) -> None:
         self.clear_images_dir()
         for branch in self.branches:
@@ -534,6 +571,8 @@ Dir::Etc::preferencesparts "/var/empty";
                         tarball = self.build_tarball(
                             target, branch, arch, kind,
                         )
+                        if tarball is None:
+                            continue
                         image_path = self.image_path(image, branch, arch, kind)
                         self.copy_image(tarball, image_path)
                         if not self.no_tests:
@@ -547,6 +586,7 @@ Dir::Etc::preferencesparts "/var/empty";
                                 ):
                                     self.error(f'Test for {image} failed')
 
+        self.ensure_build_success()
         self.remove_old_tarballs()
 
     def copy_external_files(self):

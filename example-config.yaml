@@ -1,6 +1,7 @@
 ---
 remote: remote:/pub/images/{branch}/cloud
 key: 0x00000000
+try_build_all: False
 repository_url: file:///space/ALT/{branch}
 log_level: info
 bad_arches:
