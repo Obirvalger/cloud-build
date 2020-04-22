@@ -7,6 +7,12 @@ log_level: info
 bad_arches:
 - armh
 
+rebuild_after:
+  weeks: 0
+  days: 0
+  hours: 24
+  minutes: 10
+
 external_files: ~/external_files
 
 images:

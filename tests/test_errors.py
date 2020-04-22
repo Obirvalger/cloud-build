@@ -96,3 +96,8 @@ class TestErrors(TestCase):
                 regex,
                 cloud_build.create_images
             )
+
+    def test_rebuild_after_format(self):
+        regex = 'years.*rebuild_after'
+        self.kwargs.update(config='tests/test_rebuild_after_format.yaml')
+        self.assertRaisesRegex(Error, regex, CB, **self.kwargs)

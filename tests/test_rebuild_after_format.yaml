@@ -1,0 +1,19 @@
+---
+remote: '/var/empty'
+key: 0x00000000
+
+rebuild_after:
+  days: 3
+  years: 10
+
+images:
+  rootfs-minimal:
+    target: ve/docker
+    kinds:
+    - tar.xz
+
+branches:
+  Sisyphus:
+    arches:
+      x86_64:
+...

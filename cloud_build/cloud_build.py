@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 from typing import Dict, List, Union
-
 from pathlib import Path
+
 import contextlib
 import datetime
 import fcntl
@@ -10,6 +10,7 @@ import logging
 import os
 import re
 import subprocess
+import time
 
 import yaml
 
@@ -75,7 +76,6 @@ class CB:
         self.work_dir = data_dir / 'work'
         self.out_dir = data_dir / 'out'
 
-        self.date = datetime.date.today().strftime('%Y%m%d')
         self.service_default_state = 'enabled'
         self.created_scripts: List[Path] = []
         self._build_errors: List[BuildError] = []
@@ -164,6 +164,17 @@ class CB:
         self.external_files = cfg.get('external_files')
         if self.external_files:
             self.external_files = self.expand_path(Path(self.external_files))
+
+        rebuild_after = cfg.get('rebuild_after', {'days': 1})
+        try:
+            self.rebuild_after = datetime.timedelta(**rebuild_after)
+        except TypeError as e:
+            m = re.match(r"'([^']+)'", str(e))
+            if m:
+                arg = m.groups()[0]
+                raise Error(f'Invalid key `{arg}` passed to rebuild_after')
+            else:
+                raise
 
         self._packages = cfg.get('packages', {})
         self._services = cfg.get('services', {})
@@ -464,6 +475,17 @@ Dir::Etc::preferencesparts "/var/empty";
         else:
             self.error(BuildError(target, arch))
 
+    def should_rebuild(self, tarball):
+        if not os.path.exists(tarball):
+            rebuild = True
+        else:
+            lived = time.time() - os.path.getmtime(tarball)
+            delta = datetime.timedelta(seconds=lived)
+            rebuild = delta > self.rebuild_after
+            if rebuild:
+                os.unlink(tarball)
+        return rebuild
+
     def build_tarball(
         self,
         target: str,
@@ -476,10 +498,11 @@ Dir::Etc::preferencesparts "/var/empty";
         target = f'{target}_{self.escape_branch(branch)}'
         image = re.sub(r'.*/', '', target)
         full_target = f'{target}.{kind}'
-        tarball = self.out_dir / f'{image}-{self.date}-{arch}.{kind}'
+        tarball_name = f'{image}-{arch}.{kind}'
+        tarball_path = self.out_dir / tarball_name
         apt_dir = self.work_dir / 'apt'
         with self.pushd(self.work_dir / 'mkimage-profiles'):
-            if tarball.exists():
+            if not self.should_rebuild(tarball_path):
                 self.info(f'Skip building of {full_target} {arch}')
             else:
                 cmd = [
@@ -487,17 +510,19 @@ Dir::Etc::preferencesparts "/var/empty";
                     f'APTCONF={apt_dir}/apt.conf.{branch}.{arch}',
                     f'ARCH={arch}',
                     f'IMAGE_OUTDIR={self.out_dir}',
+                    f'IMAGE_OUTFILE={tarball_name}',
                     full_target,
                 ]
                 self.info(f'Begin building of {full_target} {arch}')
                 self.call(cmd)
-                if os.path.exists(tarball):
+
+                if os.path.exists(tarball_path):
                     self.info(f'End building of {full_target} {arch}')
                 else:
                     self.build_failed(full_target, arch)
-                    tarball = None
+                    tarball_path = None
 
-        return tarball
+        return tarball_path
 
     def image_path(
         self,
@@ -525,7 +550,9 @@ Dir::Etc::preferencesparts "/var/empty";
     def remove_old_tarballs(self):
         with self.pushd(self.out_dir):
             for tb in os.listdir():
-                if not re.search(f'-{self.date}-', tb):
+                lived = time.time() - os.path.getmtime(tb)
+                delta = datetime.timedelta(seconds=lived)
+                if delta > self.rebuild_after:
                     os.unlink(tb)
 
     def ensure_scripts(self, image):
