@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 from pathlib import Path
 
 import contextlib
@@ -492,7 +492,7 @@ Dir::Etc::preferencesparts "/var/empty";
         branch: str,
         arch: str,
         kind: str
-    ) -> Path:
+    ) -> Optional[Path]:
         self.ensure_mkimage_profiles()
 
         target = f'{target}_{self.escape_branch(branch)}'
@@ -500,6 +500,7 @@ Dir::Etc::preferencesparts "/var/empty";
         full_target = f'{target}.{kind}'
         tarball_name = f'{image}-{arch}.{kind}'
         tarball_path = self.out_dir / tarball_name
+        result = None
         apt_dir = self.work_dir / 'apt'
         with self.pushd(self.work_dir / 'mkimage-profiles'):
             if not self.should_rebuild(tarball_path):
@@ -518,11 +519,11 @@ Dir::Etc::preferencesparts "/var/empty";
 
                 if os.path.exists(tarball_path):
                     self.info(f'End building of {full_target} {arch}')
+                    result = tarball_path
                 else:
                     self.build_failed(full_target, arch)
-                    tarball_path = None
 
-        return tarball_path
+        return result
 
     def image_path(
         self,
