@@ -155,7 +155,7 @@ class CB:
         self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
 
         self._repository_url = cfg.get('repository_url',
-                                       'file:///space/ALT/{branch}')
+                                       'copy:///space/ALT/{branch}')
 
         self.try_build_all = cfg.get('try_build_all', False)
 

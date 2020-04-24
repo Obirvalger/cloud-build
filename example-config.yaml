@@ -2,7 +2,7 @@
 remote: remote:/pub/images/{branch}/cloud
 key: 0x00000000
 try_build_all: False
-repository_url: file:///space/ALT/{branch}
+repository_url: http://mirror.yandex.ru/altlinux/{branch}/branch
 log_level: info
 bad_arches:
 - armh
@@ -57,13 +57,13 @@ branches:
       x86_64:
       aarch64:
       armh:
-        repository_url: file:///space/ALT/{branch}-{arch}
+        repository_url: copy:///space/ALT/{branch}-{arch}
+    repository_url: http://mirror.yandex.ru/altlinux/{branch}
   p8:
     arches:
       i586:
       x86_64:
     branding: alt-starterkit
-    repository_url: file:///space/ALT/{branch}
 
 # services:
   # sshd:
