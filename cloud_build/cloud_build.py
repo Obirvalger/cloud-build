@@ -52,15 +52,20 @@ class CB:
             self,
             config,
             *,
-            data_dir=None,
-            no_tests=False,
-            create_remote_dirs=False
+            data_dir: PathLike = None,
+            no_tests: bool = False,
+            create_remote_dirs: bool = False,
+            tasks: dict = None,
     ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
         self.parse_config(config)
         self.no_tests = no_tests
         self._create_remote_dirs = create_remote_dirs
+        if tasks is None:
+            self.tasks = {}
+        else:
+            self.tasks = tasks
 
         if not data_dir:
             data_dir = (Path(self.expand_path(os.getenv('XDG_DATA_HOME',
@@ -284,6 +289,9 @@ Dir::Etc::preferencesparts "/var/empty";
                     sources_list = f'rpm {repo} {arch} classic\n'
                     if arch not in self.bad_arches:
                         sources_list += f'rpm {repo} noarch classic\n'
+                    for task in self.tasks.get(branch.lower(), []):
+                        tr = 'http://git.altlinux.org'
+                        sources_list += f'rpm {tr} repo/{task}/{arch} task\n'
                     f.write(sources_list)
 
     def escape_branch(self, branch: str) -> str:
