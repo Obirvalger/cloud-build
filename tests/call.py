@@ -1,5 +1,5 @@
 from pathlib import Path
-from collections.abc import Iterable, Callable
+from collections.abc import Iterable
 
 import os
 import random
@@ -14,7 +14,7 @@ DEFAULT = object()
 
 
 def one_arg(args, kwargs):
-    return not kwargs and len(args) == 1 and isinstance(args[0], Callable)
+    return not kwargs and len(args) == 1 and callable(args[0])
 
 
 # apply decorator_factory if cond is True on args
