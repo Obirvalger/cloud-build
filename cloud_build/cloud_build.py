@@ -508,7 +508,7 @@ Dir::Etc::preferencesparts "/var/empty";
         full_target = f'{target}.{kind}'
         tarball_name = f'{image}-{arch}.{kind}'
         tarball_path = self.out_dir / tarball_name
-        result = None
+        result: Optional[Path] = tarball_path
         apt_dir = self.work_dir / 'apt'
         with self.pushd(self.work_dir / 'mkimage-profiles'):
             if not self.should_rebuild(tarball_path):
@@ -527,8 +527,8 @@ Dir::Etc::preferencesparts "/var/empty";
 
                 if os.path.exists(tarball_path):
                     self.info(f'End building of {full_target} {arch}')
-                    result = tarball_path
                 else:
+                    result = None
                     self.build_failed(full_target, arch)
 
         return result

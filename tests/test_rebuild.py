@@ -48,3 +48,18 @@ class TestErrors(TestCase):
             self.cb.create_images()
         except BuildError:
             self.fail(msg)
+
+    @mock.patch('subprocess.call', call.Call())
+    def test_dont_create_image_when_rebuild(self):
+        tarball = self.data_dir / 'out/docker_Sisyphus-x86_64.tar.xz'
+        tarball.touch()
+        self.cb.create_images()
+        image = (
+            self.data_dir
+            / 'images'
+            / 'Sisyphus'
+            / 'alt-sisyphus-rootfs-minimal-x86_64.tar.xz'
+        )
+        msg = 'Do not create image when rebuild'
+        if not image.exists():
+            self.fail(msg)
