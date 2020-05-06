@@ -4,6 +4,7 @@ key: 0x00000000
 try_build_all: False
 repository_url: http://mirror.yandex.ru/altlinux/{branch}/branch
 log_level: info
+no_delete: True
 bad_arches:
 - armh
 

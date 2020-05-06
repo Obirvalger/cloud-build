@@ -1,0 +1,16 @@
+---
+remote: '/tmp/cloud-build-test_no_delete'
+key: 0x00000000
+no_delete: True
+
+images:
+  rootfs-minimal:
+    target: ve/docker
+    kinds:
+    - tar.xz
+
+branches:
+  Sisyphus:
+    arches:
+      x86_64:
+...

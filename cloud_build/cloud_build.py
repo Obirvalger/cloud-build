@@ -166,6 +166,8 @@ class CB:
 
         self.try_build_all = cfg.get('try_build_all', False)
 
+        self.no_delete = cfg.get('no_delete', True)
+
         self.bad_arches = cfg.get('bad_arches', [])
 
         self.external_files = cfg.get('external_files')
@@ -678,9 +680,10 @@ Dir::Etc::preferencesparts "/var/empty";
                 'rsync',
                 f'{self.images_dir}/{branch}/',
                 '-rv',
-                '--delete',
                 remote,
             ]
+            if not self.no_delete:
+                cmd.append('--delete')
             self.call(cmd)
 
         self.kick()
