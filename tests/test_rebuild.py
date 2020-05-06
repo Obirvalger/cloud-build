@@ -16,7 +16,7 @@ import tests.call as call
 DS = {'make': [call.return_d(0), call.nop_d]}
 
 
-class TestErrors(TestCase):
+class TestRebuild(TestCase):
     def setUp(self):
         self.data_dir = Path(tempfile.mkdtemp(prefix='cloud_build'))
         self.cb = CB(
