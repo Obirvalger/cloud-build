@@ -247,15 +247,18 @@ class CB:
             print(string)
         else:
             if stdout_to_file:
+                # TODO rewrite using subprocess.run
                 p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
                 rc = p.wait()
                 maybe_fail(string, rc)
+                # TODO rewrite by passing f as stdout value
                 with open(stdout_to_file, 'w') as f:
                     if p.stdout:
                         f.write(p.stdout.read().decode())
                     if p.stdout is not None:
                         p.stdout.close()
             else:
+                # TODO rewrite using subprocess.run
                 rc = subprocess.call(cmd)
                 maybe_fail(string, rc)
 
