@@ -54,13 +54,15 @@ class CB:
             *,
             data_dir: PathLike = None,
             no_tests: bool = False,
+            no_sign: bool = False,
             create_remote_dirs: bool = False,
             tasks: dict = None,
     ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
-        self.parse_config(config)
         self.no_tests = no_tests
+        self.no_sign = no_sign
+        self.parse_config(config)
         self._create_remote_dirs = create_remote_dirs
         if tasks is None:
             self.tasks = {}
@@ -187,9 +189,10 @@ class CB:
 
         try:
             self._remote = self.expand_path(cfg['remote'])
-            self.key = cfg['key']
-            if isinstance(self.key, int):
-                self.key = '{:X}'.format(self.key)
+            if not self.no_sign:
+                self.key = cfg['key']
+                if isinstance(self.key, int):
+                    self.key = '{:X}'.format(self.key)
             self._images = cfg['images']
             self._branches = cfg['branches']
             for _, branch in self._branches.items():
@@ -641,6 +644,9 @@ Dir::Etc::preferencesparts "/var/empty";
                                         self.images_dir / branch / image)
 
     def sign(self):
+        if self.no_sign:
+            return
+
         sum_file = self.checksum_command.upper()
         for branch in self.branches:
             with self.pushd(self.images_dir / branch):

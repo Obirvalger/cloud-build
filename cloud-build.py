@@ -38,6 +38,11 @@ def parse_args():
         help='disable running tests',
     )
     parser.add_argument(
+        '--no-sign',
+        action='store_true',
+        help='disable creating check sum and signing it',
+    )
+    parser.add_argument(
         '--tasks',
         default={},
         type=is_dict,
@@ -53,7 +58,8 @@ def main():
     cb = cloud_build.CB(**dict(args._get_kwargs()))
     cb.create_images()
     cb.copy_external_files()
-    cb.sign()
+    if not args.no_sign:
+        cb.sign()
     cb.sync()
 
 
