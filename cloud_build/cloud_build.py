@@ -443,6 +443,9 @@ Dir::Etc::preferencesparts "/var/empty";
             default_state = state_re
 
         for item, constraints in data.items():
+            if constraints is None:
+                constraints = {}
+
             if (
                 image in constraints.get('exclude_images', [])
                 or branch in constraints.get('exclude_branches', [])
