@@ -534,7 +534,7 @@ Dir::Etc::preferencesparts "/var/empty";
                     full_target,
                 ]
                 self.info(f'Begin building of {full_target} {arch}')
-                self.call(cmd)
+                self.call(cmd, fail_on_error=False)
 
                 if os.path.exists(tarball_path):
                     self.info(f'End building of {full_target} {arch}')
