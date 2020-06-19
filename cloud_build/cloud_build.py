@@ -40,7 +40,7 @@ class MultipleBuildErrors(Error):
         self.build_errors = build_errors
 
     def __str__(self):
-        s = 'Fail building of the next targets:\n'
+        s = 'Fail building of the following targets:\n'
         s += '\n'.join(f'  {be.target} {be.arch}' for be in self.build_errors)
         return s
 
