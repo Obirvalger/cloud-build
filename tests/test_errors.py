@@ -119,3 +119,12 @@ class TestErrors(TestCase):
         regex = 'years.*rebuild_after'
         self.kwargs.update(config='tests/test_rebuild_after_format.yaml')
         self.assertRaisesRegex(Error, regex, CB, **self.kwargs)
+
+    def test_bad_size(self):
+        regex = 'Bad size.*'
+        cloud_build = CB(
+            config='tests/test_bad_size.yaml',
+            data_dir=self.kwargs['data_dir'],
+            no_tests=True,
+        )
+        self.assertRaisesRegex(Error, regex, cloud_build.create_images)

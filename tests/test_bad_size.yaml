@@ -1,0 +1,16 @@
+---
+remote: '/var/empty'
+key: 0x00000000
+
+images:
+  rootfs-minimal:
+    target: ve/docker
+    size: M10
+    kinds:
+    - tar.xz
+
+branches:
+  Sisyphus:
+    arches:
+      x86_64:
+...
