@@ -396,6 +396,37 @@ Dir::Etc::preferencesparts "/var/empty";
     def kinds_by_image(self, image: str) -> List[str]:
         return self._images[image]['kinds']
 
+    def convert_size(self, size: str) -> Optional[str]:
+        result = None
+        multiplier = {
+            '': 1,
+            'k': 2 ** 10,
+            'm': 2 ** 20,
+            'g': 2 ** 30,
+        }
+        match = re.match(
+            r'^(?P<num> \d+(:?.\d+)? ) (?P<suff> [kmg] )?$',
+            size,
+            re.IGNORECASE | re.VERBOSE,
+        )
+        if not match:
+            self.error('Bad size format')
+        else:
+            num = float(match.group('num'))
+            suff = match.group('suff')
+            if suff is None:
+                suff = ''
+            mul = multiplier[str.lower(suff)]
+            result = str(round(num * mul))
+
+        return result
+
+    def size_by_image(self, image: str) -> Optional[str]:
+        size = self._images[image].get('size')
+        if size is not None:
+            size = self.convert_size(str(size))
+        return size
+
     def target_by_image(self, image: str) -> str:
         return self._images[image]['target']
 
@@ -510,7 +541,8 @@ Dir::Etc::preferencesparts "/var/empty";
         target: str,
         branch: str,
         arch: str,
-        kind: str
+        kind: str,
+        size: str = None,
     ) -> Optional[Path]:
         self.ensure_mkimage_profiles()
 
@@ -531,8 +563,10 @@ Dir::Etc::preferencesparts "/var/empty";
                     f'ARCH={arch}',
                     f'IMAGE_OUTDIR={self.out_dir}',
                     f'IMAGE_OUTFILE={tarball_name}',
-                    full_target,
                 ]
+                if size is not None:
+                    cmd.append(f'VM_SIZE={size}')
+                cmd.append(full_target)
                 self.info(f'Begin building of {full_target} {arch}')
                 self.call(cmd, fail_on_error=False)
 
@@ -615,8 +649,9 @@ Dir::Etc::preferencesparts "/var/empty";
                         continue
 
                     for kind in self.kinds_by_image(image):
+                        size = self.size_by_image(image)
                         tarball = self.build_tarball(
-                            target, branch, arch, kind,
+                            target, branch, arch, kind, size
                         )
                         if tarball is None:
                             continue
