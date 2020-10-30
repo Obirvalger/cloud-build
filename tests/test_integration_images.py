@@ -62,6 +62,11 @@ class TestIntegrationImages(TestCase):
     def test_external_files(self):
         self.assertIn('README', self.images['p9'])
 
+    def test_verification_files(self):
+        for images in self.images.values():
+            self.assertIn('SHA256SUMS', images)
+            self.assertIn('SHA256SUMS.gpg', images)
+
     def test_number_of_images(self):
         number_of_images = sum(len(self.images[b]) for b in self.images.keys())
-        self.assertEqual(number_of_images, 58)
+        self.assertEqual(number_of_images, 64)

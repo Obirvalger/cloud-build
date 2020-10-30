@@ -9,6 +9,7 @@ import fcntl
 import logging
 import os
 import re
+import shutil
 import subprocess
 import time
 
@@ -698,9 +699,11 @@ Dir::Etc::preferencesparts "/var/empty";
                 cmd = [self.checksum_command] + files
                 self.info(f'Calculate checksum of {string}')
                 self.call(cmd, stdout_to_file=sum_file)
+                shutil.copyfile(sum_file, 'SHA256SUMS')
 
                 self.info(f'Sign checksum of {string}')
                 self.call(['gpg2', '--yes', '-basu', self.key, sum_file])
+                shutil.copyfile(sum_file + '.asc', 'SHA256SUMS.gpg')
 
     def kick(self):
         remote = self._remote
