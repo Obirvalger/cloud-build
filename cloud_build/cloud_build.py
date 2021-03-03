@@ -500,10 +500,12 @@ Dir::Etc::preferencesparts "/var/empty";
         return items
 
     def packages(self, image: str, branch: str) -> List[str]:
-        return self.get_items(self._packages, image, branch)
+        image_packages = self._images[image].get('packages', [])
+        return image_packages + self.get_items(self._packages, image, branch)
 
     def enabled_services(self, image: str, branch: str) -> List[str]:
-        return self.get_items(
+        image_services = self._images[image].get('services_enabled', [])
+        return image_services + self.get_items(
             self._services,
             image,
             branch,
@@ -512,7 +514,8 @@ Dir::Etc::preferencesparts "/var/empty";
         )
 
     def disabled_services(self, image: str, branch: str) -> List[str]:
-        return self.get_items(
+        image_services = self._images[image].get('services_disabled', [])
+        return image_services + self.get_items(
             self._services,
             image,
             branch,
