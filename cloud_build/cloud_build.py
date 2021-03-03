@@ -545,8 +545,6 @@ Dir::Etc::preferencesparts "/var/empty";
         kind: str,
         size: str = None,
     ) -> Optional[Path]:
-        self.ensure_mkimage_profiles()
-
         target = f'{target}_{self.escape_branch(branch)}'
         image = re.sub(r'.*/', '', target)
         full_target = f'{target}.{kind}'
@@ -639,6 +637,8 @@ Dir::Etc::preferencesparts "/var/empty";
 
     def create_images(self) -> None:
         self.clear_images_dir()
+        self.ensure_mkimage_profiles()
+
         for branch in self.branches:
             for image in self.images:
                 if self.skip_branch(image, branch):
