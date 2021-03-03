@@ -1,0 +1,22 @@
+---
+remote: '/var/empty'
+key: 0x00000000
+
+images:
+  rootfs-minimal:
+    target: ve/docker
+    kinds:
+    - tar.xz
+    packages:
+    - gosu
+
+branches:
+  Sisyphus:
+    arches:
+      x86_64:
+
+packages:
+  vim-console:
+    images:
+    - rootfs-minimal
+...
