@@ -21,6 +21,8 @@ def pushtmpd():
 
 
 def test(method, image, branch, arch):
+    result = True
+
     if arch not in ['x86_64', 'i586']:
         return True
 
@@ -37,6 +39,6 @@ def test(method, image, branch, arch):
         for command in commands:
             rc = subprocess.call(command, shell=True)
             if rc:
-                return False
+                result = False
 
-    return True
+    return result
