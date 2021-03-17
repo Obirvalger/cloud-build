@@ -33,6 +33,11 @@ def parse_args():
         help='path to config',
     )
     parser.add_argument(
+        '--create-remote-dirs',
+        action='store_true',
+        help='create remote directories',
+    )
+    parser.add_argument(
         '--no-tests',
         action='store_true',
         help='disable running tests',
