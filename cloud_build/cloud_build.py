@@ -32,7 +32,7 @@ class BuildError(Error):
         self.target = target
         self.arch = arch
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Fail building of {self.target} {self.arch}'
 
 
@@ -40,7 +40,7 @@ class MultipleBuildErrors(Error):
     def __init__(self, build_errors: List[BuildError]):
         self.build_errors = build_errors
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = 'Fail building of the following targets:\n'
         s += '\n'.join(f'  {be.target} {be.arch}' for be in self.build_errors)
         return s
@@ -51,13 +51,13 @@ class CB:
 
     def __init__(
             self,
-            config,
+            config: str,
             *,
-            data_dir: PathLike = None,
+            data_dir: Optional[PathLike] = None,
             no_tests: bool = False,
             no_sign: bool = False,
             create_remote_dirs: bool = False,
-            tasks: dict = None,
+            tasks: Optional[dict[str, List[str]]] = None,
     ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
@@ -105,7 +105,7 @@ class CB:
                 self.lock_file.close()
             return
 
-        def unlink(path):
+        def unlink(path) -> None:
             try:
                 os.unlink(path)
             except FileNotFoundError:
@@ -129,7 +129,7 @@ class CB:
         else:
             return result
 
-    def ensure_run_once(self):
+    def ensure_run_once(self) -> None:
         self.lock_file = open(self.data_dir / f'{PROG}.lock', 'w')
 
         try:
