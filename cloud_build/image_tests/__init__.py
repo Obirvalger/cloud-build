@@ -2,6 +2,7 @@ import contextlib
 import os
 import shutil
 import subprocess
+import re
 import tempfile
 
 from .lxd import test_lxd
@@ -28,11 +29,13 @@ def test(method, image, branch, arch):
 
     with pushtmpd() as tmpdir:
         image = shutil.copy(image, tmpdir)
-        image = os.path.basename(image)
+        image_name = os.path.basename(image)
         if method == 'lxd':
             commands = test_lxd(image)
         elif method == 'docker':
-            commands = test_docker(image)
+            commands = test_docker(image_name)
+        elif match := re.match(r'prog\(([-.\w]+)\)', method):
+            commands = [f"{match[1]} {image}"]
         else:
             raise Exception(f'Undefined test method {method}')
 
