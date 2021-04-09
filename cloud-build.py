@@ -78,11 +78,7 @@ def main():
     args = parse_args()
     stages = set(args.stages) - set(args.skip_stages)
 
-    cb = cloud_build.CB(
-        config=args.config,
-        tasks=args.tasks,
-        create_remote_dirs=args.create_remote_dirs,
-    )
+    cb = cloud_build.CB(config=args.config, tasks=args.tasks)
     if 'build' in stages:
         no_tests = 'test' not in stages
         cb.create_images(no_tests=no_tests)
@@ -91,7 +87,7 @@ def main():
     if 'sign' in stages:
         cb.sign()
     if 'sync' in stages:
-        cb.sync()
+        cb.sync(create_remote_dirs=args.create_remote_dirs)
 
 
 if __name__ == '__main__':

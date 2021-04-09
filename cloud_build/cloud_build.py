@@ -54,13 +54,11 @@ class CB:
             config: str,
             *,
             data_dir: Optional[PathLike] = None,
-            create_remote_dirs: bool = False,
             tasks: Optional[dict[str, List[str]]] = None,
     ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
         self.parse_config(config)
-        self._create_remote_dirs = create_remote_dirs
         if tasks is None:
             self.tasks = {}
         else:
@@ -710,10 +708,10 @@ Dir::Etc::preferencesparts "/var/empty";
             host = remote[:colon]
             self.call(['ssh', host, 'kick'])
 
-    def sync(self) -> None:
+    def sync(self, create_remote_dirs: bool = False) -> None:
         for branch in self.branches:
             remote = self.remote(branch)
-            if self._create_remote_dirs:
+            if create_remote_dirs:
                 os.makedirs(remote, exist_ok=True)
             cmd = [
                 'rsync',

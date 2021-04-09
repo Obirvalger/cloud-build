@@ -22,7 +22,6 @@ class TestRebuild(TestCase):
         self.cb = CB(
             config='tests/test_rebuild.yaml',
             data_dir=self.data_dir,
-            create_remote_dirs=True,
         )
 
     def tearDown(self):

@@ -68,7 +68,6 @@ class TestErrors(TestCase):
             cloud_build = CB(
                 config='tests/test_try_build_all.yaml',
                 data_dir=self.kwargs['data_dir'],
-                create_remote_dirs=True,
             )
             regex = r'build.*:'
             self.assertRaisesRegex(
@@ -86,7 +85,6 @@ class TestErrors(TestCase):
             cloud_build = CB(
                 config='tests/test_try_build_all.yaml',
                 data_dir=self.kwargs['data_dir'],
-                create_remote_dirs=True,
             )
             regex = r'build.*:'
             self.assertRaisesRegex(
@@ -104,7 +102,6 @@ class TestErrors(TestCase):
             cloud_build = CB(
                 config='tests/test_not_try_build_all.yaml',
                 data_dir=self.kwargs['data_dir'],
-                create_remote_dirs=True,
             )
             regex = r'build.*aarch64'
             self.assertRaisesRegex(
