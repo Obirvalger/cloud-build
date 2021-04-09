@@ -23,6 +23,8 @@ def parse_args():
                 result[key] = v
         return result
 
+    stages = ['build', 'test', 'copy_external_files', 'sign', 'sync']
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
@@ -31,6 +33,20 @@ def parse_args():
         '--config',
         default=f'/etc/{PROG}/config.yaml',
         help='path to config',
+    )
+    parser.add_argument(
+        '--stages',
+        nargs='+',
+        default=stages,
+        choices=stages,
+        help='list of stages',
+    )
+    parser.add_argument(
+        '--skip-stages',
+        nargs='+',
+        default=[],
+        choices=stages,
+        help='list of sipping stages',
     )
     parser.add_argument(
         '--create-remote-dirs',
@@ -60,12 +76,22 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cb = cloud_build.CB(**dict(args._get_kwargs()))
-    cb.create_images()
-    cb.copy_external_files()
-    if not args.no_sign:
+    stages = set(args.stages) - set(args.skip_stages)
+
+    cb = cloud_build.CB(
+        config=args.config,
+        tasks=args.tasks,
+        create_remote_dirs=args.create_remote_dirs,
+    )
+    if 'build' in stages:
+        no_tests = 'test' not in stages
+        cb.create_images(no_tests=no_tests)
+    if 'copy_external_files' in stages:
+        cb.copy_external_files()
+    if 'sign' in stages:
         cb.sign()
-    cb.sync()
+    if 'sync' in stages:
+        cb.sync()
 
 
 if __name__ == '__main__':

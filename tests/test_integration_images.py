@@ -26,10 +26,9 @@ class TestIntegrationImages(TestCase):
             cloud_build = CB(
                 config='tests/test_integration_images.yaml',
                 data_dir=(cls.work_dir / 'cloud_build').as_posix(),
-                no_tests=True,
                 create_remote_dirs=True,
             )
-            cloud_build.create_images()
+            cloud_build.create_images(no_tests=True)
             cloud_build.copy_external_files()
             cloud_build.sign()
             cloud_build.sync()

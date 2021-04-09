@@ -1,6 +1,5 @@
 ---
 remote: '/var/empty'
-key: 0x00000000
 
 images:
   rootfs-minimal:

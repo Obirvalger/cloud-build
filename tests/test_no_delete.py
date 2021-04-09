@@ -25,12 +25,11 @@ class TestNoDelete(TestCase):
         cb = CB(
             config='tests/test_no_delete_false.yaml',
             data_dir=self.data_dir,
-            no_tests=True,
             create_remote_dirs=True,
         )
         other_file = self.images_dir / 'other_file.txt'
         other_file.write_text('Some text')
-        cb.create_images()
+        cb.create_images(no_tests=True)
         cb.sync()
         del cb
         msg = 'Other files shoud be deleted if not no_delete'
@@ -42,12 +41,11 @@ class TestNoDelete(TestCase):
         cb = CB(
             config='tests/test_no_delete_true.yaml',
             data_dir=self.data_dir,
-            no_tests=True,
             create_remote_dirs=True,
         )
         other_file = self.images_dir / 'other_file.txt'
         other_file.write_text('Some text')
-        cb.create_images()
+        cb.create_images(no_tests=True)
         cb.sync()
         del cb
         msg = 'Other files shoud not be deleted if no_delete'

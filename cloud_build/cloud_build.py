@@ -54,15 +54,11 @@ class CB:
             config: str,
             *,
             data_dir: Optional[PathLike] = None,
-            no_tests: bool = False,
-            no_sign: bool = False,
             create_remote_dirs: bool = False,
             tasks: Optional[dict[str, List[str]]] = None,
     ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
-        self.no_tests = no_tests
-        self.no_sign = no_sign
         self.parse_config(config)
         self._create_remote_dirs = create_remote_dirs
         if tasks is None:
@@ -192,10 +188,9 @@ class CB:
 
         try:
             self._remote = self.expand_path(cfg['remote'])
-            if not self.no_sign:
-                self.key = cfg['key']
-                if isinstance(self.key, int):
-                    self.key = '{:X}'.format(self.key)
+            self.key = cfg.get('key')
+            if isinstance(self.key, int):
+                self.key = '{:X}'.format(self.key)
             self._images = cfg['images']
             self._branches = cfg['branches']
             for _, branch in self._branches.items():
@@ -638,7 +633,7 @@ Dir::Etc::preferencesparts "/var/empty";
         if self._build_errors:
             self.error(MultipleBuildErrors(self._build_errors))
 
-    def create_images(self) -> None:
+    def create_images(self, no_tests: bool = False) -> None:
         self.clear_images_dir()
         self.ensure_mkimage_profiles()
 
@@ -661,7 +656,7 @@ Dir::Etc::preferencesparts "/var/empty";
                             continue
                         image_path = self.image_path(image, branch, arch, kind)
                         self.copy_image(tarball, image_path)
-                        if not self.no_tests:
+                        if not no_tests:
                             for test in self.tests_by_image(image):
                                 self.info(f'Test {image} {branch} {arch}')
                                 if not cloud_build.image_tests.test(
@@ -688,8 +683,8 @@ Dir::Etc::preferencesparts "/var/empty";
                                         self.images_dir / branch / image)
 
     def sign(self):
-        if self.no_sign:
-            return
+        if self.key is None:
+            self.error('Pass key to config file for sign')
 
         sum_file = self.checksum_command.upper()
         for branch in self.branches:

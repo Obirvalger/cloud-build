@@ -22,7 +22,6 @@ class TestRebuild(TestCase):
         self.cb = CB(
             config='tests/test_rebuild.yaml',
             data_dir=self.data_dir,
-            no_tests=True,
             create_remote_dirs=True,
         )
 
@@ -37,7 +36,7 @@ class TestRebuild(TestCase):
         os.utime(tarball, times=(two_hours_ago, two_hours_ago))
         msg = 'Do not try to rebuild with outdated cache'
         with self.assertRaises(BuildError, msg=msg):
-            self.cb.create_images()
+            self.cb.create_images(no_tests=True)
 
     @mock.patch('subprocess.call', call.Call(decorators=DS))
     def test_dont_rebuild(self):
@@ -45,7 +44,7 @@ class TestRebuild(TestCase):
         tarball.touch()
         msg = 'Try to rebuild with valid cache'
         try:
-            self.cb.create_images()
+            self.cb.create_images(no_tests=True)
         except BuildError:
             self.fail(msg)
 
@@ -53,7 +52,7 @@ class TestRebuild(TestCase):
     def test_dont_create_image_when_rebuild(self):
         tarball = self.data_dir / 'out/docker_Sisyphus-x86_64.tar.xz'
         tarball.touch()
-        self.cb.create_images()
+        self.cb.create_images(no_tests=True)
         image = (
             self.data_dir
             / 'images'

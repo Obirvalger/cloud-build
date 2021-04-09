@@ -46,8 +46,7 @@ class TestErrors(TestCase):
         with open('tests/minimal_config.yaml') as f:
             cfg = yaml.safe_load(f)
 
-        parameter = 'key'
-        for parameter in ['remote', 'key', 'images', 'branches']:
+        for parameter in ['remote', 'images', 'branches']:
             with open(config, 'w') as f:
                 yaml.safe_dump(update(cfg, {parameter: None}), f)
 
@@ -69,14 +68,14 @@ class TestErrors(TestCase):
             cloud_build = CB(
                 config='tests/test_try_build_all.yaml',
                 data_dir=self.kwargs['data_dir'],
-                no_tests=True,
                 create_remote_dirs=True,
             )
             regex = r'build.*:'
             self.assertRaisesRegex(
                 MultipleBuildErrors,
                 regex,
-                cloud_build.create_images
+                cloud_build.create_images,
+                no_tests=True
             )
 
     def test_try_build_all_non_zero_rc(self):
@@ -87,14 +86,14 @@ class TestErrors(TestCase):
             cloud_build = CB(
                 config='tests/test_try_build_all.yaml',
                 data_dir=self.kwargs['data_dir'],
-                no_tests=True,
                 create_remote_dirs=True,
             )
             regex = r'build.*:'
             self.assertRaisesRegex(
                 MultipleBuildErrors,
                 regex,
-                cloud_build.create_images
+                cloud_build.create_images,
+                no_tests=True
             )
 
     def test_not_try_build_all(self):
@@ -105,14 +104,14 @@ class TestErrors(TestCase):
             cloud_build = CB(
                 config='tests/test_not_try_build_all.yaml',
                 data_dir=self.kwargs['data_dir'],
-                no_tests=True,
                 create_remote_dirs=True,
             )
             regex = r'build.*aarch64'
             self.assertRaisesRegex(
                 BuildError,
                 regex,
-                cloud_build.create_images
+                cloud_build.create_images,
+                no_tests=True
             )
 
     def test_rebuild_after_format(self):
@@ -126,6 +125,20 @@ class TestErrors(TestCase):
             cloud_build = CB(
                 config='tests/test_bad_size.yaml',
                 data_dir=self.kwargs['data_dir'],
-                no_tests=True,
             )
-            self.assertRaisesRegex(Error, regex, cloud_build.create_images)
+            self.assertRaisesRegex(
+                Error,
+                regex,
+                cloud_build.create_images,
+                no_tests=True
+            )
+
+    def test_sign_requires_key(self):
+        with mock.patch('subprocess.call', call.Call()):
+            regex = 'key.*config'
+            cloud_build = CB(
+                config='tests/minimal_config.yaml',
+                data_dir=self.kwargs['data_dir'],
+            )
+            cloud_build.create_images(no_tests=True)
+            self.assertRaisesRegex(Error, regex, cloud_build.sign)
