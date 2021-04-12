@@ -184,11 +184,12 @@ class CB:
         self._services = cfg.get('services', {})
         self._scripts = cfg.get('scripts', {})
 
+        self.key = cfg.get('key')
+        if isinstance(self.key, int):
+            self.key = '{:X}'.format(self.key)
+
         try:
             self._remote = self.expand_path(cfg['remote'])
-            self.key = cfg.get('key')
-            if isinstance(self.key, int):
-                self.key = '{:X}'.format(self.key)
             self._images = cfg['images']
             self._branches = cfg['branches']
             for _, branch in self._branches.items():
