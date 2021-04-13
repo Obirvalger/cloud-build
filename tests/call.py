@@ -199,7 +199,7 @@ class Call():
     def __call__(self, args):
         rc = None
         prog = args[0]
-        func = self.progs.get(prog, DEFAULT)
+        func = self.progs.get(prog, self.progs.get(DEFAULT, error_call))
         decorators = self.decorators.get(prog, [])
         if not isinstance(decorators, Iterable):
             decorators = [decorators]
