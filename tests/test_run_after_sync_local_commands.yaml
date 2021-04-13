@@ -1,0 +1,15 @@
+---
+remote: '/var/empty'
+after_sync_commands: ['kick']
+
+images:
+  rootfs-minimal:
+    target: ve/docker
+    kinds:
+    - tar.xz
+
+branches:
+  Sisyphus:
+    arches:
+      x86_64:
+...

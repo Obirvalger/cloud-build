@@ -1,5 +1,6 @@
 ---
 remote: remote:/pub/images/{branch}/cloud
+after_sync_commands: ['kick']
 key: 0x00000000
 try_build_all: False
 repository_url: http://mirror.yandex.ru/altlinux/{branch}/branch

@@ -184,6 +184,8 @@ class CB:
         self._services = cfg.get('services', {})
         self._scripts = cfg.get('scripts', {})
 
+        self._after_sync_commands = cfg.get('after_sync_commands', [])
+
         self.key = cfg.get('key')
         if isinstance(self.key, int):
             self.key = '{:X}'.format(self.key)
@@ -702,12 +704,22 @@ Dir::Etc::preferencesparts "/var/empty";
                 self.call(['gpg2', '--yes', '-basu', self.key, sum_file])
                 shutil.copyfile(sum_file + '.asc', 'SHA256SUMS.gpg')
 
-    def kick(self):
+    def after_sync_commands(self):
         remote = self._remote
         colon = remote.find(':')
         if colon != -1:
             host = remote[:colon]
-            self.call(['ssh', host, 'kick'])
+
+            def cmd(command):
+                return ['ssh', host, command]
+        else:
+            host = remote
+
+            def cmd(command):
+                return [command]
+
+        for command in self._after_sync_commands:
+            self.call(cmd(command))
 
     def sync(self, create_remote_dirs: bool = False) -> None:
         for branch in self.branches:
@@ -724,4 +736,4 @@ Dir::Etc::preferencesparts "/var/empty";
                 cmd.append('--delete')
             self.call(cmd)
 
-        self.kick()
+        self.after_sync_commands()
