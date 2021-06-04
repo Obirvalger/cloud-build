@@ -313,7 +313,7 @@ Dir::Etc::preferencesparts "/var/empty";
             url = (
                 'git://'
                 + 'git.altlinux.org/'
-                + 'people/mike/packages/mkimage-profiles.git'
+                + 'people/antohami/packages/mkimage-profiles.git'
             )
         os.chdir(self.work_dir)
         if os.path.isdir('mkimage-profiles'):
