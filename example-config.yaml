@@ -35,6 +35,8 @@ images:
     - use/net-ssh
     - use/vmguest/kvm
     - use/repo
+    tests:
+    - method: prog(cloud-build-test-cloud)
   rootfs-minimal:
     target: ve/docker
     kinds:

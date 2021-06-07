@@ -1,0 +1,15 @@
+#!/bin/sh -eu
+
+IMAGE="${1?Pass image}"
+NAME="test-cloud-$$"
+
+at_exit() {
+    vml rm --force --names "$NAME"
+    exit "$@"
+}
+
+trap 'at_exit $?' EXIT
+trap 'exit 143' HUP INT QUIT PIPE TERM
+
+vml run -i "$IMAGE" --wait-ssh --names "$NAME"
+vml ssh --check --cmd 'apt-get update && apt-get install -y vim-console' --names "$NAME"
