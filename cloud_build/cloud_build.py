@@ -590,7 +590,9 @@ Dir::Etc::preferencesparts "/var/empty";
         )
         return path
 
-    def copy_image(self, src: Path, dst: Path) -> None:
+    def copy_image(self, src: Path, dst: Path, *, rewrite=False) -> None:
+        if rewrite and dst.exists():
+            os.unlink(dst)
         os.link(src, dst)
 
     def clear_images_dir(self):
@@ -680,8 +682,11 @@ Dir::Etc::preferencesparts "/var/empty";
                 with self.pushd(self.external_files / branch):
                     for image in os.listdir():
                         self.info(f'Copy external image {image} in {branch}')
-                        self.copy_image(image,
-                                        self.images_dir / branch / image)
+                        self.copy_image(
+                            image,
+                            self.images_dir / branch / image,
+                            rewrite=True,
+                        )
 
     def sign(self):
         if self.key is None:
