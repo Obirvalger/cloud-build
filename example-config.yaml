@@ -46,7 +46,7 @@ images:
     no_scripts:
     - var
   rootfs-systemd:
-    target: ve/systemd-base
+    target: ve/systemd-networkd
     kinds:
     - tar.xz
     tests:
