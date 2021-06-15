@@ -69,7 +69,7 @@ class CB:
                                                         '~/.local/share')))
                         / f'{PROG}')
         else:
-            data_dir = Path(data_dir)
+            data_dir = Path(data_dir).absolute()
         self.data_dir = data_dir
 
         self.checksum_command = 'sha256sum'
