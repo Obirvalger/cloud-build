@@ -1,6 +1,7 @@
 from unittest import TestCase
 from unittest import mock
 
+import os
 import shutil
 import tempfile
 
@@ -25,11 +26,16 @@ def update(old_dict, kwargs):
 class TestErrors(TestCase):
     def setUp(self):
         kwargs = {}
-        kwargs['data_dir'] = tempfile.mkdtemp(prefix='cloud_build')
+        kwargs['data_dir'] = tempfile.mkdtemp(prefix='cloud_build_data')
         self.kwargs = kwargs
+        self.images_dir = tempfile.mkdtemp(prefix='cloud_build_images')
+        self.config = None
 
     def tearDown(self):
         shutil.rmtree(self.kwargs['data_dir'])
+        shutil.rmtree(self.images_dir)
+        if (config := self.config) is not None:
+            os.unlink(config)
 
     def test_read_config_not_found(self):
         regex = 'config file.*No such file or directory'
@@ -42,16 +48,16 @@ class TestErrors(TestCase):
         self.assertRaisesRegex(Error, regex, CB, **self.kwargs)
 
     def test_required_parameters_in_config(self):
-        config = tempfile.mktemp(prefix='cb_conf')
+        self.config = tempfile.mktemp(prefix='cb_conf')
         with open('tests/minimal_config.yaml') as f:
             cfg = yaml.safe_load(f)
 
         for parameter in ['remote', 'images', 'branches']:
-            with open(config, 'w') as f:
+            with open(self.config, 'w') as f:
                 yaml.safe_dump(update(cfg, {parameter: None}), f)
 
             regex = f'parameter.*{parameter}'
-            self.kwargs.update(config=config)
+            self.kwargs.update(config=self.config)
             self.assertRaisesRegex(Error, regex, CB, **self.kwargs)
 
     def test_run_already_running(self):
@@ -139,3 +145,18 @@ class TestErrors(TestCase):
             )
             cloud_build.create_images(no_tests=True)
             self.assertRaisesRegex(Error, regex, cloud_build.sign)
+
+    def test_skiped_build(self):
+        with mock.patch('subprocess.call'):
+            cloud_build = CB(
+                config='tests/minimal_config.yaml',
+                data_dir=self.kwargs['data_dir'],
+                built_images_dir=self.images_dir,
+            )
+            regex = r'build.*skip'
+            self.assertRaisesRegex(
+                Error,
+                regex,
+                cloud_build.create_images,
+                no_tests=True
+            )

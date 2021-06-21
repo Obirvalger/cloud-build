@@ -55,6 +55,7 @@ class CB:
             *,
             data_dir: Optional[PathLike] = None,
             tasks: Optional[dict[str, List[str]]] = None,
+            built_images_dir: Optional[PathLike] = None,
     ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
@@ -74,7 +75,12 @@ class CB:
 
         self.checksum_command = 'sha256sum'
 
-        self.images_dir = data_dir / 'images'
+        if built_images_dir:
+            self.images_dir = Path(built_images_dir).absolute()
+            self.no_build = True
+        else:
+            self.images_dir = data_dir / 'images'
+            self.no_build = False
         self.work_dir = data_dir / 'work'
         self.out_dir = data_dir / 'out'
 
@@ -637,6 +643,9 @@ Dir::Etc::preferencesparts "/var/empty";
             self.error(MultipleBuildErrors(self._build_errors))
 
     def create_images(self, no_tests: bool = False) -> None:
+        if self.no_build:
+            msg = 'Trying to build images when build stage should be skipped'
+            self.error(msg)
         self.clear_images_dir()
         self.ensure_mkimage_profiles()
 

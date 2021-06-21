@@ -35,6 +35,10 @@ def parse_args():
         help='path to config',
     )
     parser.add_argument(
+        '--built-images-dir',
+        help='path to already built image for stages other then build',
+    )
+    parser.add_argument(
         '--stages',
         nargs='+',
         default=stages,
@@ -78,7 +82,12 @@ def main():
     args = parse_args()
     stages = set(args.stages) - set(args.skip_stages)
 
-    cb = cloud_build.CB(config=args.config, tasks=args.tasks)
+    cb = cloud_build.CB(
+        config=args.config,
+        tasks=args.tasks,
+        built_images_dir=args.built_images_dir,
+    )
+
     if 'build' in stages:
         no_tests = 'test' not in stages
         cb.create_images(no_tests=no_tests)
