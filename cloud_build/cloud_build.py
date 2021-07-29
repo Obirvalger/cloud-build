@@ -666,7 +666,10 @@ Dir::Etc::preferencesparts "/var/empty";
     def clear_images_dir(self):
         for images_dir in self.images_dirs_list():
             for path in images_dir.iterdir():
-                os.unlink(path)
+                if path.is_file():
+                    os.unlink(path)
+                else:
+                    shutil.rmtree(path)
 
     def remove_old_tarballs(self):
         with self.pushd(self.out_dir):
