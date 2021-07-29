@@ -57,10 +57,13 @@ class CB:
             data_dir: Optional[PathLike] = None,
             tasks: Optional[dict[str, List[str]]] = None,
             built_images_dir: Optional[PathLike] = None,
+            force_rebuild: bool = False,
     ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
         self.parse_config(config)
+        if force_rebuild:
+            self.rebuild_after = datetime.timedelta(0)
         if tasks is None:
             self.tasks = {}
         else:

@@ -58,6 +58,11 @@ def parse_args():
         help='create remote directories',
     )
     parser.add_argument(
+        '--force-rebuild',
+        action='store_true',
+        help='forces rebuild',
+    )
+    parser.add_argument(
         '--no-tests',
         action='store_true',
         help='disable running tests',
@@ -86,6 +91,7 @@ def main():
         config=args.config,
         tasks=args.tasks,
         built_images_dir=args.built_images_dir,
+        force_rebuild=args.force_rebuild,
     )
 
     if 'build' in stages:

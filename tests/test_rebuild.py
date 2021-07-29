@@ -38,6 +38,20 @@ class TestRebuild(TestCase):
             self.cb.create_images(no_tests=True)
 
     @mock.patch('subprocess.call', call.Call(decorators=DS))
+    def test_do_force_rebuild(self):
+        tarball = self.data_dir / 'out/docker_Sisyphus-x86_64.tar.xz'
+        tarball.touch()
+        del self.cb
+        cb = CB(
+            config='tests/test_rebuild.yaml',
+            data_dir=self.data_dir,
+            force_rebuild=True,
+        )
+        msg = 'Do not try to rebuild when force_rebuild'
+        with self.assertRaises(BuildError, msg=msg):
+            cb.create_images(no_tests=True)
+
+    @mock.patch('subprocess.call', call.Call(decorators=DS))
     def test_dont_rebuild(self):
         tarball = self.data_dir / 'out/docker_Sisyphus-x86_64.tar.xz'
         tarball.touch()
