@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Set, Tuple, Union, Optional
 from pathlib import Path
 
 import contextlib
@@ -10,6 +10,7 @@ import logging
 import os
 import re
 import shutil
+import string
 import subprocess
 import time
 
@@ -76,10 +77,10 @@ class CB:
         self.checksum_command = 'sha256sum'
 
         if built_images_dir:
-            self.images_dir = Path(built_images_dir).absolute()
+            self._images_dir = Path(built_images_dir).absolute()
             self.no_build = True
         else:
-            self.images_dir = data_dir / 'images'
+            self._images_dir = data_dir / 'images'
             self.no_build = False
         self.work_dir = data_dir / 'work'
         self.out_dir = data_dir / 'out'
@@ -121,6 +122,56 @@ class CB:
         except FileNotFoundError:
             pass
         self.lock_file.close()
+
+    @property
+    def _remote_formaters(self) -> Set[str]:
+        return {
+            key
+            for tup in string.Formatter().parse(self._remote)
+            if (key := tup[1]) is not None
+        }
+
+    @property
+    def is_remote_arch(self) -> bool:
+        return 'arch' in self._remote_formaters
+
+    @property
+    def is_remote_branch(self) -> bool:
+        return 'branch' in self._remote_formaters
+
+    def images_dirs_remotes_list(self) -> List[Tuple[Path, str]]:
+        images_dirs_list = []
+        images_dir = self._images_dir
+        if self.is_remote_branch:
+            for branch in self.branches:
+                if self.is_remote_arch:
+                    for arch in self.arches_by_branch(branch):
+                        remote = self._remote.format(branch=branch, arch=arch)
+                        pair = (images_dir / branch / arch, remote)
+                        images_dirs_list.append(pair)
+                else:
+                    remote = self._remote.format(branch=branch)
+                    images_dirs_list.append((images_dir / branch, remote))
+        else:
+            if self.is_remote_arch:
+                for arch in self.all_arches:
+                    remote = self._remote.format(arch=arch)
+                    images_dirs_list.append((images_dir / arch, remote))
+            else:
+                images_dirs_list.append((images_dir, self._remote))
+
+        return images_dirs_list
+
+    def images_dirs_list(self) -> List[Path]:
+        return [pair[0] for pair in self.images_dirs_remotes_list()]
+
+    def images_dir(self, branch: str, arch: str) -> Path:
+        images_dir = self._images_dir
+        if self.is_remote_branch:
+            images_dir = images_dir / branch
+        if self.is_remote_arch:
+            images_dir = images_dir / arch
+        return images_dir
 
     def expand_path(self, path: PathLike):
         result = os.path.expanduser(os.path.expandvars(path))
@@ -221,8 +272,9 @@ class CB:
         self.log.error(err)
         raise err
 
-    def remote(self, branch: str) -> str:
-        return self._remote.format(branch=branch)
+    def remote(self, branch: str, arch: str) -> str:
+        # import pdb; pdb.set_trace()
+        return self._remote.format(branch=branch, arch=arch)
 
     def repository_url(self, branch: str, arch: str) -> str:
         url = self._branches[branch]['arches'][arch].get('repository_url')
@@ -276,8 +328,9 @@ class CB:
                 value = getattr(self, attr)
                 if isinstance(value, str) or isinstance(value, os.PathLike):
                     os.makedirs(value, exist_ok=True)
-        for branch in self.branches:
-            os.makedirs(self.images_dir / branch, exist_ok=True)
+
+        for images_dir in self.images_dirs_list():
+            os.makedirs(images_dir, exist_ok=True)
 
     def generate_apt_files(self) -> None:
         apt_dir = self.work_dir / 'apt'
@@ -385,6 +438,13 @@ Dir::Etc::preferencesparts "/var/empty";
 
     def arches_by_branch(self, branch: str) -> List[str]:
         return list(self._branches[branch]['arches'].keys())
+
+    @property
+    def all_arches(self) -> List[str]:
+        arches: Set[str] = set()
+        for branch in self.branches:
+            arches |= set(self.arches_by_branch(branch))
+        return list(arches)
 
     def branding_by_branch(self, branch: str) -> str:
         return self._branches[branch].get('branding', '')
@@ -590,8 +650,7 @@ Dir::Etc::preferencesparts "/var/empty";
         kind: str
     ) -> Path:
         path = (
-            self.images_dir
-            / branch
+            self.images_dir(branch, arch)
             / f'alt-{branch.lower()}-{image}-{arch}.{kind}'
         )
         return path
@@ -602,9 +661,8 @@ Dir::Etc::preferencesparts "/var/empty";
         os.link(src, dst)
 
     def clear_images_dir(self):
-        for branch in self.branches:
-            directory = self.images_dir / branch
-            for path in directory.iterdir():
+        for images_dir in self.images_dirs_list():
+            for path in images_dir.iterdir():
                 os.unlink(path)
 
     def remove_old_tarballs(self):
@@ -683,17 +741,23 @@ Dir::Etc::preferencesparts "/var/empty";
         self.remove_old_tarballs()
 
     def copy_external_files(self):
-        if self.external_files:
-            for branch in os.listdir(self.external_files):
-                if branch not in self.branches:
-                    self.error(f'Unknown branch {branch} in external_files')
+        if not self.external_files:
+            return
 
-                with self.pushd(self.external_files / branch):
+        for branch in os.listdir(self.external_files):
+            if branch not in self.branches:
+                self.error(f'Unknown branch {branch} in external_files')
+            arches = self.arches_by_branch(branch)
+            for arch in os.listdir(self.external_files / branch):
+                if arch not in arches:
+                    self.error(f'Unknown arch {arch} in external_files')
+                with self.pushd(self.external_files / branch / arch):
                     for image in os.listdir():
-                        self.info(f'Copy external image {image} in {branch}')
+                        msg = f'Copy external file {image} in {branch}/{arch}'
+                        self.info(msg)
                         self.copy_image(
                             image,
-                            self.images_dir / branch / image,
+                            self.images_dir(branch, arch) / image,
                             rewrite=True,
                         )
 
@@ -702,8 +766,8 @@ Dir::Etc::preferencesparts "/var/empty";
             self.error('Pass key to config file for sign')
 
         sum_file = self.checksum_command.upper()
-        for branch in self.branches:
-            with self.pushd(self.images_dir / branch):
+        for images_dir in self.images_dirs_list():
+            with self.pushd(images_dir):
                 files = [f
                          for f in os.listdir()
                          if not f.startswith(sum_file)]
@@ -736,13 +800,12 @@ Dir::Etc::preferencesparts "/var/empty";
             self.call(cmd(command))
 
     def sync(self, create_remote_dirs: bool = False) -> None:
-        for branch in self.branches:
-            remote = self.remote(branch)
+        for images_dir, remote in self.images_dirs_remotes_list():
             if create_remote_dirs:
                 os.makedirs(remote, exist_ok=True)
             cmd = [
                 'rsync',
-                f'{self.images_dir}/{branch}/',
+                f'{images_dir}/',
                 '-rv',
                 remote,
             ]

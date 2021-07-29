@@ -55,7 +55,6 @@ class TestRebuild(TestCase):
         image = (
             self.data_dir
             / 'images'
-            / 'Sisyphus'
             / 'alt-sisyphus-rootfs-minimal-x86_64.tar.xz'
         )
         msg = 'Do not create image when rebuild'
