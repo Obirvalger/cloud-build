@@ -141,7 +141,10 @@ class TestIntegrationImages(TestCase):
         else:
             self.assertCountEqual(self._images.keys(), ['branch'])
 
-    def test_build_cloud(self):
+    def test_build_cloud_img(self):
+        self.assertIn('alt-p9-cloud-x86_64.img', self.images('p9', 'x86_64'))
+
+    def test_rename_regex_cloud(self):
         self.assertIn('alt-p9-cloud-x86_64.qcow2', self.images('p9', 'x86_64'))
 
     def test_exclude_arches(self):

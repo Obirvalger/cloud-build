@@ -17,6 +17,7 @@ import time
 import yaml
 
 import cloud_build.image_tests
+import cloud_build.rename
 
 PROG = 'cloud-build'
 
@@ -652,10 +653,11 @@ Dir::Etc::preferencesparts "/var/empty";
         arch: str,
         kind: str
     ) -> Path:
-        path = (
-            self.images_dir(branch, arch)
-            / f'alt-{branch.lower()}-{image}-{arch}.{kind}'
-        )
+        name = f'alt-{branch.lower()}-{image}-{arch}.{kind}'
+        rename_dict = self._images[image].get('rename', {})
+        if rename_dict:
+            name = cloud_build.rename.rename(rename_dict, name)
+        path = self.images_dir(branch, arch) / name
         return path
 
     def copy_image(self, src: Path, dst: Path, *, rewrite=False) -> None:
@@ -730,6 +732,7 @@ Dir::Etc::preferencesparts "/var/empty";
                         )
                         if tarball is None:
                             continue
+
                         image_path = self.image_path(image, branch, arch, kind)
                         self.copy_image(tarball, image_path)
                         if not no_tests:

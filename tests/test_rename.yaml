@@ -1,0 +1,22 @@
+---
+remote: '/tmp/cloud-build/images'
+
+images:
+  rootfs-minimal:
+    target: ve/docker
+    kinds:
+    - tar.xz
+    rename:
+      to: docker.tar.xz
+  rootfs-systemd:
+    target: ve/systemd-networkd
+    kinds:
+    - tar.xz
+    rename:
+      prog: /tmp/cloud-build/renamer.py
+
+branches:
+  p9:
+    arches:
+      x86_64:
+...

@@ -21,12 +21,16 @@ images:
     target: vm/cloud-systemd
     kinds:
     - img
-    - qcow2
+    - qcow2c
     exclude_arches:
     - armh
     - ppc64le
     exclude_branches:
     - p8
+    rename:
+      regex: '(.*)\.qcow2c$'
+      to: '\1.qcow2'
+
   rootfs-minimal:
     target: ve/docker
     kinds:
