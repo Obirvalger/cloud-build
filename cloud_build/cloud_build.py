@@ -365,7 +365,7 @@ Dir::Etc::preferencesparts "/var/empty";
     def escape_branch(self, branch: str) -> str:
         return re.sub(r'\.', '_', branch)
 
-    def ensure_mkimage_profiles(self, update: bool = False) -> None:
+    def ensure_mkimage_profiles(self) -> None:
         """Checks that mkimage-profiles exists or clones it"""
 
         def add_recipe(variable: str, value: str) -> str:
@@ -380,10 +380,9 @@ Dir::Etc::preferencesparts "/var/empty";
             )
         os.chdir(self.work_dir)
         if os.path.isdir('mkimage-profiles'):
-            if update:
-                with self.pushd('mkimage-profiles'):
-                    self.info('Updating mkimage-profiles')
-                    self.call(['git', 'pull'], fail_on_error=False)
+            with self.pushd('mkimage-profiles'):
+                self.info('Updating mkimage-profiles')
+                self.call(['git', 'pull', '--ff-only'], fail_on_error=True)
         else:
             self.info('Downloading mkimage-profiles')
             self.call(['git', 'clone', url, 'mkimage-profiles'])
