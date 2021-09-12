@@ -41,7 +41,6 @@ class TestRename(TestCase):
             cloud_build.create_images(no_tests=True)
             cloud_build.sync(create_remote_dirs=True)
 
-
         images_dir = cls.work_dir / 'images'
         cls.images = os.listdir(images_dir)
 
