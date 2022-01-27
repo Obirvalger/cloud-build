@@ -404,10 +404,11 @@ Dir::Etc::preferencesparts "/var/empty";
                         )
                         prerequisites_s = ' '.join(prerequisites)
 
+                        recipes = []
                         branding = self.branding_by_branch(branch)
                         if branding:
                             branding = f'\n\t@$(call set,BRANDING,{branding})'
-                        recipes = [branding]
+                            recipes.append(branding)
 
                         for package in self.packages(image, branch):
                             recipes.append(
