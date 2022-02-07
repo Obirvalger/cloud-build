@@ -45,7 +45,7 @@ class TestRebuild(TestCase):
         cb = CB(
             config='tests/test_rebuild.yaml',
             data_dir=self.data_dir,
-            force_rebuild=True,
+            config_override={'rebuild_after': {'days': 0}},
         )
         msg = 'Do not try to rebuild when force_rebuild'
         with self.assertRaises(BuildError, msg=msg):

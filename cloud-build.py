@@ -87,11 +87,15 @@ def main():
     args = parse_args()
     stages = set(args.stages) - set(args.skip_stages)
 
+    config_override = {}
+    if args.force_rebuild:
+        config_override['rebuild_after'] = {'days': 0}
+
     cb = cloud_build.CB(
         config=args.config,
         tasks=args.tasks,
         built_images_dir=args.built_images_dir,
-        force_rebuild=args.force_rebuild,
+        config_override=config_override,
     )
 
     if 'build' in stages:

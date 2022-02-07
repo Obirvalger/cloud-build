@@ -58,13 +58,11 @@ class CB:
             data_dir: Optional[PathLike] = None,
             tasks: Optional[dict[str, List[str]]] = None,
             built_images_dir: Optional[PathLike] = None,
-            force_rebuild: bool = False,
+            config_override: Optional[Dict] = None,
     ) -> None:
         self.initialized = False
         self._save_cwd = os.getcwd()
-        self.parse_config(config)
-        if force_rebuild:
-            self.rebuild_after = datetime.timedelta(0)
+        self.parse_config(config, config_override)
         if tasks is None:
             self.tasks = {}
         else:
@@ -203,7 +201,14 @@ class CB:
         self.debug(f'Popd from {new_dir}')
         os.chdir(previous_dir)
 
-    def parse_config(self, config: str) -> None:
+    def parse_config(
+        self,
+        config: str,
+        override: Optional[Dict] = None
+    ) -> None:
+        if override is None:
+            override = {}
+
         try:
             with open(config) as f:
                 cfg = yaml.safe_load(f)
@@ -230,7 +235,10 @@ class CB:
         if self.external_files:
             self.external_files = self.expand_path(Path(self.external_files))
 
-        rebuild_after = cfg.get('rebuild_after', {'days': 1})
+        rebuild_after = override.get(
+            'rebuild_after',
+            cfg.get('rebuild_after', {'days': 1}),
+        )
         try:
             self.rebuild_after = datetime.timedelta(**rebuild_after)
         except TypeError as e:
