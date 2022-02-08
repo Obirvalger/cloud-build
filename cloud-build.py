@@ -35,6 +35,10 @@ def parse_args():
         help='path to config',
     )
     parser.add_argument(
+        '--key',
+        help='gpg key to sign',
+    )
+    parser.add_argument(
         '--built-images-dir',
         help='path to already built image for stages other then build',
     )
@@ -90,6 +94,8 @@ def main():
     config_override = {}
     if args.force_rebuild:
         config_override['rebuild_after'] = {'days': 0}
+    if key := args.key:
+        config_override['key'] = key
 
     cb = cloud_build.CB(
         config=args.config,

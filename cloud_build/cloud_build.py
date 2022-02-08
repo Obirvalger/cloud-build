@@ -255,7 +255,7 @@ class CB:
 
         self._after_sync_commands = cfg.get('after_sync_commands', [])
 
-        self.key = cfg.get('key')
+        self.key = override.get('key', cfg.get('key'))
         if isinstance(self.key, int):
             self.key = '{:X}'.format(self.key)
 
