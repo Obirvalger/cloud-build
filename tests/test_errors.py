@@ -146,6 +146,16 @@ class TestErrors(TestCase):
             cloud_build.create_images(no_tests=True)
             self.assertRaisesRegex(Error, regex, cloud_build.sign)
 
+    def test_sign_override_key(self):
+        with mock.patch('subprocess.call', call.Call()):
+            cloud_build = CB(
+                config='tests/minimal_config.yaml',
+                data_dir=self.kwargs['data_dir'],
+                config_override={'key': 0},
+            )
+            cloud_build.create_images(no_tests=True)
+            cloud_build.sign()
+
     def test_skiped_build(self):
         with mock.patch('subprocess.call'):
             cloud_build = CB(
