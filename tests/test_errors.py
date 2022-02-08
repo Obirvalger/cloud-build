@@ -60,6 +60,24 @@ class TestErrors(TestCase):
             self.kwargs.update(config=self.config)
             self.assertRaisesRegex(Error, regex, CB, **self.kwargs)
 
+    def test_override_required_parameters_in_config(self):
+        self.config = tempfile.mktemp(prefix='cb_conf')
+        config_override = {
+            'remote': '/var/empty',
+            'images': {},
+            'branches': {},
+        }
+        with open('tests/minimal_config.yaml') as f:
+            cfg = yaml.safe_load(f)
+
+        for parameter in ['remote', 'images', 'branches']:
+            with open(self.config, 'w') as f:
+                yaml.safe_dump(update(cfg, {parameter: None}), f)
+
+            self.kwargs.update(config=self.config)
+            self.kwargs.update(config_override=config_override)
+            CB(**self.kwargs)
+
     def test_run_already_running(self):
         self.kwargs.update(config='tests/minimal_config.yaml')
         cb = CB(**self.kwargs)  # noqa F841

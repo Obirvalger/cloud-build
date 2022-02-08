@@ -216,6 +216,12 @@ class CB:
             msg = f'Could not read config file `{e.filename}`: {e.strerror}'
             raise Error(msg)
 
+        def lazy_get_raises(key):
+            if key in override:
+                return override[key]
+            else:
+                return cfg[key]
+
         self.mkimage_profiles_git = self.expand_path(
             cfg.get('mkimage_profiles_git', '')
         )
@@ -260,9 +266,9 @@ class CB:
             self.key = '{:X}'.format(self.key)
 
         try:
-            self._remote = self.expand_path(cfg['remote'])
-            self._images = cfg['images']
-            self._branches = cfg['branches']
+            self._remote = self.expand_path(lazy_get_raises('remote'))
+            self._images = lazy_get_raises('images')
+            self._branches = lazy_get_raises('branches')
             for _, branch in self._branches.items():
                 branch['arches'] = {k: {} if v is None else v
                                     for k, v in branch['arches'].items()}
