@@ -39,6 +39,10 @@ def parse_args():
         help='gpg key to sign',
     )
     parser.add_argument(
+        '--remote',
+        help='remote to sync images',
+    )
+    parser.add_argument(
         '--built-images-dir',
         help='path to already built image for stages other then build',
     )
@@ -92,10 +96,15 @@ def main():
     stages = set(args.stages) - set(args.skip_stages)
 
     config_override = {}
+    def args_to_override(key):
+        if (value := getattr(args, key)) is not None:
+            config_override[key] = value
+
     if args.force_rebuild:
         config_override['rebuild_after'] = {'days': 0}
-    if key := args.key:
-        config_override['key'] = key
+
+    for arg in ['key', 'remote']:
+        args_to_override(arg)
 
     cb = cloud_build.CB(
         config=args.config,
