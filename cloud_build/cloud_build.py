@@ -231,6 +231,8 @@ class CB:
         self._repository_url = cfg.get('repository_url',
                                        'copy:///space/ALT/{branch}')
 
+        self._image_repo = cfg.get('image_repo')
+
         self.try_build_all = cfg.get('try_build_all', False)
 
         self.no_delete = cfg.get('no_delete', True)
@@ -300,6 +302,17 @@ class CB:
             url = self._branches[branch].get('repository_url',
                                              self._repository_url)
         return url.format(branch=branch, arch=arch)
+
+    def image_repo(self, branch: str, arch: str) -> str:
+        url = self._branches[branch]['arches'][arch].get('image_repo')
+        if url is None:
+            url = self._branches[branch].get('image_repo',
+                                             self._image_repo)
+
+        if url is not None:
+            url = url.format(branch=branch, arch=arch)
+
+        return url
 
     def call(
         self,
@@ -639,6 +652,7 @@ Dir::Etc::preferencesparts "/var/empty";
             if not self.should_rebuild(tarball_path):
                 self.info(f'Skip building of {full_target} {arch}')
             else:
+                image_repo = self.image_repo(branch, arch)
                 cmd = [
                     'make',
                     f'APTCONF={apt_dir}/apt.conf.{branch}.{arch}',
@@ -647,6 +661,8 @@ Dir::Etc::preferencesparts "/var/empty";
                     f'IMAGE_OUTDIR={self.out_dir}',
                     f'IMAGE_OUTFILE={tarball_name}',
                 ]
+                if image_repo is not None:
+                    cmd.append(f'REPO={image_repo}')
                 if size is not None:
                     cmd.append(f'VM_SIZE={size}')
                 cmd.append(full_target)
