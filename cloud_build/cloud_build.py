@@ -432,10 +432,6 @@ Dir::Etc::preferencesparts "/var/empty";
                         prerequisites_s = ' '.join(prerequisites)
 
                         recipes = []
-                        branding = self.branding(image, branch)
-                        if branding:
-                            branding = f'\n\t@$(call set,BRANDING,{branding})'
-                            recipes.append(branding)
 
                         for package in self.packages(image, branch):
                             recipes.append(
@@ -589,11 +585,14 @@ Dir::Etc::preferencesparts "/var/empty";
 
         return items
 
-    def branding(self, image: str, branch: str) -> str:
+    def branding(self, image: str, branch: str) -> Optional[str]:
         if (image_branding := self._images[image].get('branding')) is not None:
-            return image_branding
+            if image_branding.lower() == 'none':
+                return None
+            else:
+                return image_branding
 
-        return self._branches[branch].get('branding', '')
+        return self._branches[branch].get('branding')
 
     def packages(self, image: str, branch: str) -> List[str]:
         image_packages = self._images[image].get('packages', [])
@@ -639,6 +638,7 @@ Dir::Etc::preferencesparts "/var/empty";
     def build_tarball(
         self,
         target: str,
+        branding: Optional[str],
         branch: str,
         arch: str,
         kind: str,
@@ -664,6 +664,8 @@ Dir::Etc::preferencesparts "/var/empty";
                     f'IMAGE_OUTDIR={self.out_dir}',
                     f'IMAGE_OUTFILE={tarball_name}',
                 ]
+                if branding is not None:
+                    cmd.append(f'BRANDING={branding}')
                 if image_repo is not None:
                     cmd.append(f'REPO={image_repo}')
                 if size is not None:
@@ -755,6 +757,7 @@ Dir::Etc::preferencesparts "/var/empty";
                     continue
                 self.ensure_scripts(image)
                 target = self.target_by_image(image)
+                branding = self.branding(image, branch)
                 for arch in self.arches_by_branch(branch):
                     if self.skip_arch(image, arch):
                         continue
@@ -762,7 +765,7 @@ Dir::Etc::preferencesparts "/var/empty";
                     for kind in self.kinds_by_image(image):
                         size = self.size_by_image(image)
                         tarball = self.build_tarball(
-                            target, branch, arch, kind, size
+                            target, branding, branch, arch, kind, size
                         )
                         if tarball is None:
                             continue
