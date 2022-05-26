@@ -432,7 +432,7 @@ Dir::Etc::preferencesparts "/var/empty";
                         prerequisites_s = ' '.join(prerequisites)
 
                         recipes = []
-                        branding = self.branding_by_branch(branch)
+                        branding = self.branding(image, branch)
                         if branding:
                             branding = f'\n\t@$(call set,BRANDING,{branding})'
                             recipes.append(branding)
@@ -476,9 +476,6 @@ Dir::Etc::preferencesparts "/var/empty";
         for branch in self.branches:
             arches |= set(self.arches_by_branch(branch))
         return list(arches)
-
-    def branding_by_branch(self, branch: str) -> str:
-        return self._branches[branch].get('branding', '')
 
     def prerequisites_by_branch(self, branch: str) -> List[str]:
         return self._branches[branch].get('prerequisites', [])
@@ -591,6 +588,12 @@ Dir::Etc::preferencesparts "/var/empty";
                 items.append(item)
 
         return items
+
+    def branding(self, image: str, branch: str) -> str:
+        if (image_branding := self._images[image].get('branding')) is not None:
+            return image_branding
+
+        return self._branches[branch].get('branding', '')
 
     def packages(self, image: str, branch: str) -> List[str]:
         image_packages = self._images[image].get('packages', [])
