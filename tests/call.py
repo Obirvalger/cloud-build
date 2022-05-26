@@ -1,8 +1,8 @@
 from pathlib import Path
 from collections.abc import Iterable
 
+import json
 import os
-import random
 import re
 import subprocess
 import sys
@@ -157,9 +157,7 @@ def make(args):
     match = re.match(r'.*/([-\w]*)\.(.*)', args[-1])
     target, kind = match.groups()
     image = out_dir / f'{target}-{arch}.{kind}'
-    image.write_bytes(
-        bytes(random.randint(0, 255) for x in range(random.randint(32, 128)))
-    )
+    image.write_text(json.dumps(args))
 
     return 0
 
