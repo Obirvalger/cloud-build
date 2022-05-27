@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest import TestCase
 from unittest import mock
 
+import json
 import os
 import shutil
 
@@ -155,6 +156,46 @@ class TestIntegrationImages(TestCase):
         self.assertNotIn('alt-p9-cloud-ppc64le.qcow2',
                          self.images('p9', 'ppc64le'))
 
+    def get_make_args(self, branch, arch, image):
+        image = self.image_path(branch, arch, image)
+        return json.loads(image.read_text())
+
+    def test_branding_present_p9_rootfs_minimal(self):
+        self.assertIn(
+            "BRANDING=alt-starterkit",
+            self.get_make_args(
+                'p9',
+                'x86_64',
+                'alt-p9-rootfs-minimal-x86_64.tar.xz',
+            ),
+        )
+
+    def test_branding_present_p9_cloud(self):
+        self.assertIn(
+            "BRANDING=alt-starterkit",
+            self.get_make_args('p9', 'x86_64', 'alt-p9-cloud-x86_64.qcow2'),
+        )
+
+    def test_branding_absent_p9_workstation_cloud(self):
+        self.assertNotRegex(
+            ' '.join(self.get_make_args(
+                'p9',
+                'x86_64',
+                'alt-p9-workstation-cloud-x86_64.qcow2',
+            )),
+            'BRANDING'
+        )
+
+    def test_branding_absent_sisyphus_cloud(self):
+        self.assertNotRegex(
+            ' '.join(self.get_make_args(
+                'Sisyphus',
+                'x86_64',
+                'alt-sisyphus-cloud-x86_64.qcow2',
+            )),
+            'BRANDING'
+        )
+
     def test_external_files(self):
         self.assertIn('README', self.images('p9', 'x86_64'))
 
@@ -169,11 +210,11 @@ class TestIntegrationImages(TestCase):
             'SHA256SUMS',
         ).read_text().splitlines())
         index = bool(self.branch) * 2 + bool(self.arch)
-        expected_numbers = [52, 17, 21, 7]
+        expected_numbers = [58, 19, 24, 8]
         self.assertEqual(number_of_images, expected_numbers[index])
 
     def test_number_of_images(self):
         number_of_images = sum(len(lst) for lst in self.images_lists())
         index = bool(self.branch) * 2 + bool(self.arch)
-        expected_numbers = [56, 72, 64, 96]
+        expected_numbers = [62, 78, 70, 102]
         self.assertEqual(number_of_images, expected_numbers[index])
