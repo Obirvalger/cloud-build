@@ -382,6 +382,8 @@ Dir::Etc::preferencesparts "/var/empty";
 
                 with open(f'{apt_dir}/sources.list.{branch}.{arch}', 'w') as f:
                     sources_list = f'rpm {repo} {arch} classic\n'
+                    if arch == 'x86_64':
+                        sources_list += f'rpm {repo} {arch}-i586 classic\n'
                     if arch not in self.bad_arches:
                         sources_list += f'rpm {repo} noarch classic\n'
                     for task in self.tasks.get(branch.lower(), []):
