@@ -302,7 +302,6 @@ class CB:
         raise err
 
     def remote(self, branch: str, arch: str) -> str:
-        # import pdb; pdb.set_trace()
         return self._remote.format(branch=branch, arch=arch)
 
     def repository_url(self, branch: str, arch: str) -> str:
