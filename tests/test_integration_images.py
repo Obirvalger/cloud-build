@@ -47,6 +47,7 @@ class TestIntegrationImages(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.work_dir = Path('/tmp/cloud-build')
+        shutil.rmtree(cls.work_dir, ignore_errors=True)
         os.makedirs(cls.work_dir / 'external_files/p9/x86_64', exist_ok=True)
         (cls.work_dir / 'external_files/p9/x86_64/README').write_text('README')
         config = cls.work_dir / 'config.yaml'
