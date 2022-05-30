@@ -5,6 +5,8 @@ log_level: debug
 
 external_files: /tmp/cloud-build/external_files
 
+patch_mp_prog: /bin/true
+
 bad_arches:
 - armh
 

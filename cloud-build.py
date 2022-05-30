@@ -39,6 +39,10 @@ def parse_args():
         help='gpg key to sign',
     )
     parser.add_argument(
+        '--patch-mp-prog',
+        help='program to change mkimage-profiles code',
+    )
+    parser.add_argument(
         '--remote',
         help='remote to sync images',
     )
@@ -104,7 +108,7 @@ def main():
     if args.force_rebuild:
         config_override['rebuild_after'] = {'days': 0}
 
-    for arg in ['key', 'remote']:
+    for arg in ['key', 'remote', 'patch_mp_prog']:
         args_to_override(arg)
 
     cb = cloud_build.CB(

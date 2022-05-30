@@ -184,6 +184,7 @@ class Call():
             'make': make,
             'gpg2': gpg,
             'rsync': rsync,
+            '/bin/true': SUBPROCESS_CALL,
             DEFAULT: error_call,
         }
 

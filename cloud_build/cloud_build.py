@@ -216,6 +216,9 @@ class CB:
             msg = f'Could not read config file `{e.filename}`: {e.strerror}'
             raise Error(msg)
 
+        def get_overrided(key):
+            return cfg.get(key, override.get(key))
+
         def lazy_get_raises(key):
             if key in override:
                 return override[key]
@@ -232,6 +235,12 @@ class CB:
                                        'copy:///space/ALT/{branch}')
 
         self._image_repo = cfg.get('image_repo')
+
+        self.patch_mp_prog = get_overrided('patch_mp_prog')
+        if (patch_mp_prog := self.patch_mp_prog) is not None:
+            self.patch_mp_prog = self.expand_path(
+                Path(patch_mp_prog)
+            ).absolute().as_posix()
 
         self.try_build_all = cfg.get('try_build_all', False)
 
@@ -394,6 +403,10 @@ Dir::Etc::preferencesparts "/var/empty";
     def escape_branch(self, branch: str) -> str:
         return re.sub(r'\.', '_', branch)
 
+    def patch_mp(self):
+        if (patch_mp_prog := self.patch_mp_prog) is not None:
+            self.call([patch_mp_prog])
+
     def ensure_mkimage_profiles(self) -> None:
         """Checks that mkimage-profiles exists or clones it"""
 
@@ -418,6 +431,7 @@ Dir::Etc::preferencesparts "/var/empty";
 
         # create file with proper brandings
         with self.pushd('mkimage-profiles'):
+            self.patch_mp()
             with open(f'conf.d/{PROG}.mk', 'w') as f:
                 for image in self.images:
                     target = self.target_by_image(image)
