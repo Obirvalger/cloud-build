@@ -108,16 +108,11 @@ class CB:
                 self.lock_file.close()
             return
 
-        def unlink(path) -> None:
-            try:
-                os.unlink(path)
-            except FileNotFoundError:
-                pass
-
-        for name in self.created_scripts:
-            unlink(name)
-        unlink(self.work_dir / f'mkimage-profiles/conf.d/{PROG}.mk')
-
+        # check directory exists for test: work dir deleted to early
+        if (self.work_dir / 'mkimage-profiles' / '.git').exists():
+            os.chdir(self.work_dir / 'mkimage-profiles')
+            subprocess.run(['git', 'reset', '--hard'])
+            subprocess.run(['git', 'clean', '-fdx'])
         os.chdir(self._save_cwd)
         try:
             self.info(f'Finish {PROG}')
