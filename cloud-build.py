@@ -62,7 +62,7 @@ def parse_args():
         nargs='+',
         default=[],
         choices=stages,
-        help='list of sipping stages',
+        help='list of skipping stages',
     )
     parser.add_argument(
         '--create-remote-dirs',
