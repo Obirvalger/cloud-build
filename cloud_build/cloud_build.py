@@ -63,7 +63,11 @@ class CB:
         self.initialized = False
         self._save_cwd = os.getcwd()
         self.parse_config(config, config_override)
-        if config_override and 'mkimage_profiles_git' in config_override:
+        if config_override \
+            and (
+                'mkimage_profiles_branch' in config_override
+                or 'mkimage_profiles_git' in config_override
+                ):
             self.force_recreate_mp = True
         else:
             self.force_recreate_mp = False
@@ -227,6 +231,7 @@ class CB:
         self.mkimage_profiles_git = self.expand_path(
             get_overrided('mkimage_profiles_git', '')
         )
+        self.mkimage_profiles_branch = get_overrided('mkimage_profiles_branch')
 
         self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
 
@@ -427,7 +432,10 @@ Dir::Etc::preferencesparts "/var/empty";
                 self.call(['git', 'pull', '--ff-only'], fail_on_error=True)
         else:
             self.info('Downloading mkimage-profiles')
-            self.call(['git', 'clone', url, 'mkimage-profiles'])
+            git_clone = ['git', 'clone', url, 'mkimage-profiles']
+            if branch := self.mkimage_profiles_branch:
+                git_clone.extend(['--branch', branch])
+            self.call(git_clone)
 
         # create file with proper brandings
         with self.pushd('mkimage-profiles'):
