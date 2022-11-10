@@ -63,6 +63,10 @@ class CB:
         self.initialized = False
         self._save_cwd = os.getcwd()
         self.parse_config(config, config_override)
+        if config_override and 'mkimage_profiles_git' in config_override:
+            self.force_recreate_mp = True
+        else:
+            self.force_recreate_mp = False
         if tasks is None:
             self.tasks = {}
         else:
@@ -211,8 +215,8 @@ class CB:
             msg = f'Could not read config file `{e.filename}`: {e.strerror}'
             raise Error(msg)
 
-        def get_overrided(key):
-            return override.get(key, cfg.get(key))
+        def get_overrided(key, default=None):
+            return override.get(key, cfg.get(key, default))
 
         def lazy_get_raises(key):
             if key in override:
@@ -221,7 +225,7 @@ class CB:
                 return cfg[key]
 
         self.mkimage_profiles_git = self.expand_path(
-            cfg.get('mkimage_profiles_git', '')
+            get_overrided('mkimage_profiles_git', '')
         )
 
         self.log_level = getattr(logging, cfg.get('log_level', 'INFO').upper())
@@ -401,7 +405,7 @@ Dir::Etc::preferencesparts "/var/empty";
         if (patch_mp_prog := self.patch_mp_prog) is not None:
             self.call([patch_mp_prog])
 
-    def ensure_mkimage_profiles(self) -> None:
+    def ensure_mkimage_profiles(self, force_recreate=False) -> None:
         """Checks that mkimage-profiles exists or clones it"""
 
         def add_recipe(variable: str, value: str) -> str:
@@ -415,6 +419,8 @@ Dir::Etc::preferencesparts "/var/empty";
                 + 'people/antohami/packages/mkimage-profiles.git'
             )
         os.chdir(self.work_dir)
+        if force_recreate and os.path.isdir('mkimage-profiles'):
+            shutil.rmtree('mkimage-profiles')
         if os.path.isdir('mkimage-profiles'):
             with self.pushd('mkimage-profiles'):
                 self.info('Updating mkimage-profiles')
@@ -759,7 +765,7 @@ Dir::Etc::preferencesparts "/var/empty";
             msg = 'Trying to build images when build stage should be skipped'
             self.error(msg)
         self.clear_images_dir()
-        self.ensure_mkimage_profiles()
+        self.ensure_mkimage_profiles(self.force_recreate_mp)
 
         for branch in self.branches:
             for image in self.images:

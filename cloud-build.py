@@ -43,6 +43,10 @@ def parse_args():
         help='program to change mkimage-profiles code',
     )
     parser.add_argument(
+        '--mkimage-profiles-git',
+        help='force using mkimage-profiles from that repository',
+    )
+    parser.add_argument(
         '--remote',
         help='remote to sync images',
     )
@@ -108,7 +112,7 @@ def main():
     if args.force_rebuild:
         config_override['rebuild_after'] = {'days': 0}
 
-    for arg in ['key', 'remote', 'patch_mp_prog']:
+    for arg in ['key', 'remote', 'patch_mp_prog', 'mkimage_profiles_git']:
         args_to_override(arg)
 
     cb = cloud_build.CB(
