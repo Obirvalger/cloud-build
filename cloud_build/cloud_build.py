@@ -212,7 +212,7 @@ class CB:
             raise Error(msg)
 
         def get_overrided(key):
-            return cfg.get(key, override.get(key))
+            return override.get(key, cfg.get(key))
 
         def lazy_get_raises(key):
             if key in override:
