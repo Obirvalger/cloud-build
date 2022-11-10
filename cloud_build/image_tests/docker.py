@@ -13,10 +13,17 @@ CMD ["/bin/bash"]"""
         f.write(dockerfile)
 
     name = f'cloud_build_test_{abs(hash(image))}'
+    test_commads = [
+        'apt-get update',
+        'apt-get install -y vim-console',
+        '[ -L /var/run ]',
+        '[ -L /var/lock ]'
+    ]
+    test_commad = " && ".join(test_commads)
     commands = [
         f'docker build --rm --tag={name} .',
         f"docker run --rm {name} /bin/sh -c "
-        "'apt-get update && apt-get install -y vim-console'",
+        f"'{test_commad}'",
         f'docker image rm {name}',
     ]
 
