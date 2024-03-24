@@ -876,7 +876,7 @@ Dir::Etc::preferencesparts "/var/empty";
             cmd = [
                 'rsync',
                 f'{images_dir}/',
-                '-rv',
+                '-rvl',
                 remote,
             ]
             if not self.no_delete:
