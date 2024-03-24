@@ -49,7 +49,9 @@ class TestIntegrationImages(TestCase):
         cls.work_dir = Path('/tmp/cloud-build')
         shutil.rmtree(cls.work_dir, ignore_errors=True)
         os.makedirs(cls.work_dir / 'external_files/p9/x86_64', exist_ok=True)
-        (cls.work_dir / 'external_files/p9/x86_64/README').write_text('README')
+        readme = cls.work_dir / 'external_files/p9/x86_64/README'
+        readme.write_text('README')
+        os.symlink(readme, readme.with_suffix(".txt"))
         config = cls.work_dir / 'config.yaml'
         branch = cls.branch
         arch = cls.arch
@@ -200,6 +202,10 @@ class TestIntegrationImages(TestCase):
     def test_external_files(self):
         self.assertIn('README', self.images('p9', 'x86_64'))
 
+    def test_external_symlinks(self):
+        readme_txt = self.image_path('p9', 'x86_64', 'README.txt')
+        self.assertTrue(readme_txt.is_symlink())
+
     def test_verification_files(self):
         for images_list in self.images_lists():
             self.assertIn('SHA256SUMS', images_list)
@@ -211,11 +217,11 @@ class TestIntegrationImages(TestCase):
             'SHA256SUMS',
         ).read_text().splitlines())
         index = bool(self.branch) * 2 + bool(self.arch)
-        expected_numbers = [58, 19, 24, 8]
+        expected_numbers = [59, 20, 25, 9]
         self.assertEqual(number_of_images, expected_numbers[index])
 
     def test_number_of_images(self):
         number_of_images = sum(len(lst) for lst in self.images_lists())
         index = bool(self.branch) * 2 + bool(self.arch)
-        expected_numbers = [62, 78, 70, 102]
+        expected_numbers = [63, 79, 71, 103]
         self.assertEqual(number_of_images, expected_numbers[index])
