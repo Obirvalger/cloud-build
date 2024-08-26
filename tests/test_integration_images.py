@@ -163,6 +163,16 @@ class TestIntegrationImages(TestCase):
         image = self.image_path(branch, arch, image)
         return json.loads(image.read_text())
 
+    def test_branch_sisyphus_cloud(self):
+        self.assertIn(
+            "BRANCH=sisyphus",
+            self.get_make_args(
+                'Sisyphus',
+                'x86_64',
+                'alt-sisyphus-cloud-x86_64.qcow2',
+            ),
+        )
+
     def test_branding_present_p9_rootfs_minimal(self):
         self.assertIn(
             "BRANDING=alt-starterkit",

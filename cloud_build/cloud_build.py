@@ -684,7 +684,7 @@ Dir::Etc::preferencesparts "/var/empty";
                     'make',
                     f'APTCONF={apt_dir}/apt.conf.{branch}.{arch}',
                     f'ARCH={arch}',
-                    f'BRANCH={branch}',
+                    f'BRANCH={branch.lower()}',
                     f'IMAGE_OUTDIR={self.out_dir}',
                     f'IMAGE_OUTFILE={tarball_name}',
                 ]
